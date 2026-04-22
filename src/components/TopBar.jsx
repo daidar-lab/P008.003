@@ -1,7 +1,11 @@
-import { Share2, Plus } from 'lucide-react'
+import { Share2 } from 'lucide-react'
 import { useState } from 'react'
 
-const TABS = ['This month', 'Last month', 'Custom']
+export const PERIOD_THIS_MONTH = 'Este mês'
+export const PERIOD_LAST_MONTH = 'Mês anterior'
+export const PERIOD_CUSTOM     = 'Personalizado'
+
+const TABS = [PERIOD_THIS_MONTH, PERIOD_LAST_MONTH, PERIOD_CUSTOM]
 
 export default function TopBar({
   period,
@@ -9,7 +13,7 @@ export default function TopBar({
   customRange,
   onCustomRangeChange
 }) {
-  const [internalActive, setInternalActive] = useState('This month')
+  const [internalActive, setInternalActive] = useState(PERIOD_THIS_MONTH)
   const controlled = typeof onPeriodChange === 'function'
   const active = controlled ? period : internalActive
   const setActive = controlled ? onPeriodChange : setInternalActive
@@ -30,7 +34,7 @@ export default function TopBar({
         ))}
       </div>
 
-      {controlled && active === 'Custom' && onCustomRangeChange && (
+      {controlled && active === PERIOD_CUSTOM && onCustomRangeChange && (
         <div className="custom-range" role="group" aria-label="Intervalo personalizado">
           <input
             type="date"
@@ -49,15 +53,8 @@ export default function TopBar({
       )}
 
       <div className="topbar-right">
-        <button className="icon-btn" aria-label="Share">
+        <button className="icon-btn" aria-label="Compartilhar">
           <Share2 size={16} />
-        </button>
-        <button className="btn">
-          <Plus size={15} strokeWidth={2.2} />
-          <span>New Report</span>
-        </button>
-        <button className="btn btn-primary">
-          <span>Upgrade to Plus</span>
         </button>
       </div>
     </div>

@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Building2 } from 'lucide-react'
-import TopBar from '../components/TopBar.jsx'
+import TopBar, {
+  PERIOD_THIS_MONTH, PERIOD_LAST_MONTH
+} from '../components/TopBar.jsx'
 import TotalBalance from '../components/TotalBalance.jsx'
 import Performance from '../components/Performance.jsx'
 import SpentAmount from '../components/SpentAmount.jsx'
@@ -60,7 +62,7 @@ const CARDS = [
 ]
 
 export default function Overview2() {
-  const [period, setPeriod] = useState('This month')
+  const [period, setPeriod] = useState(PERIOD_THIS_MONTH)
   const [customRange, setCustomRange] = useState(() => monthRange(0))
   const [selectedCard, setSelectedCard] = useState(null)
   const [codigoFilial, setCodigoFilial] = useState('')
@@ -69,8 +71,8 @@ export default function Overview2() {
   const filiaisList = Array.isArray(filiais) ? filiais : []
 
   const activeRange = useMemo(() => {
-    if (period === 'This month') return monthRange(0)
-    if (period === 'Last month') return monthRange(-1)
+    if (period === PERIOD_THIS_MONTH) return monthRange(0)
+    if (period === PERIOD_LAST_MONTH) return monthRange(-1)
     return customRange
   }, [period, customRange])
 
