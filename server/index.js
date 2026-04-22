@@ -13,7 +13,7 @@ import revenue from './routes/revenue.js'
 import tiposEntradaSaida from './routes/tiposEntradaSaida.js'
 
 const app = express()
-const PORT = Number(process.env.PORT || 3006)
+const PORT = Number(process.env.PORT || 3001)
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || true }))
 app.use(express.json())

@@ -23,7 +23,7 @@ qualquer outra database editando `.env`:
 ```
 # a aplicação cria as tabelas necessárias na database que você apontar
 DATABASE_URL=postgres://user:password@localhost:5432/postgres
-PORT=3006
+PORT=3001
 CORS_ORIGIN=http://localhost:5173
 ```
 
@@ -59,7 +59,7 @@ Saída esperada no boot:
 
 ```
 ✓ schema ensured
-▲ Vento API on http://localhost:3006
+▲ Vento API on http://localhost:3001
 ```
 
 ## Endpoints
@@ -83,6 +83,6 @@ Todas respondem JSON, já no shape consumido pelos componentes React.
 
 ## Proxy no frontend
 
-O `vite.config.js` faz proxy de `/api` para `http://localhost:3006`,
+O `vite.config.js` faz proxy de `/api` para `http://localhost:3001`,
 então no dev basta subir os dois processos (server + Vite) e o frontend
 consome as rotas transparentemente.

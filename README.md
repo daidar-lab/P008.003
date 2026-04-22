@@ -16,7 +16,7 @@ com **API Node/Express + PostgreSQL** fornecendo os dados.
   src/
     App.jsx, main.jsx, styles.css, api.js
     components/       # Sidebar, TopBar, cards, charts, tabelas
-  vite.config.js      # proxy /api -> http://localhost:3006
+  vite.config.js      # proxy /api -> http://localhost:3001
 server/               # backend
   index.js            # Express app
   db.js               # pool de conexões pg
@@ -53,7 +53,7 @@ npm run dev
 Isso sobe **frontend + API juntos** via `concurrently`:
 
 - `web` → Vite em http://localhost:5173
-- `api` → Express em http://localhost:3006
+- `api` → Express em http://localhost:3001
 
 > ⚠️ Se só o Vite estiver rodando, qualquer chamada a `/api/*` vai
 > falhar no proxy com `ECONNREFUSED` e o browser verá `500 Internal
