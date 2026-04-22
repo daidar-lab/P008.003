@@ -20,7 +20,7 @@ Edite `.env` com suas credenciais, ou defina `DATABASE_URL`:
 
 ```
 DATABASE_URL=postgres://user:password@localhost:5432/vento
-PORT=3001
+PORT=3006
 CORS_ORIGIN=http://localhost:5173
 ```
 
@@ -50,7 +50,7 @@ npm run dev        # node --watch
 npm start          # produção
 ```
 
-Saída esperada: `▲ Vento API on http://localhost:3001`
+Saída esperada: `▲ Vento API on http://localhost:3006`
 
 ## Endpoints
 
@@ -68,6 +68,6 @@ Todas respondem JSON, já no shape consumido pelos componentes React.
 
 ## Proxy no frontend
 
-O `vite.config.js` faz proxy de `/api` para `http://localhost:3001`,
+O `vite.config.js` faz proxy de `/api` para `http://localhost:3006`,
 então no dev basta subir os dois processos (server + Vite) e o frontend
 consome as rotas transparentemente.

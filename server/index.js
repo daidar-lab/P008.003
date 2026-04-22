@@ -11,7 +11,7 @@ import spending from './routes/spending.js'
 import revenue from './routes/revenue.js'
 
 const app = express()
-const PORT = Number(process.env.PORT || 3001)
+const PORT = Number(process.env.PORT || 3006)
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || true }))
 app.use(express.json())

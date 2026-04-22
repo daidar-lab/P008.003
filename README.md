@@ -16,7 +16,7 @@ com **API Node/Express + PostgreSQL** fornecendo os dados.
   src/
     App.jsx, main.jsx, styles.css, api.js
     components/       # Sidebar, TopBar, cards, charts, tabelas
-  vite.config.js      # proxy /api -> http://localhost:3001
+  vite.config.js      # proxy /api -> http://localhost:3006
 server/               # backend
   index.js            # Express app
   db.js               # pool de conexões pg
@@ -42,7 +42,7 @@ server/               # backend
    cp .env.example .env      # ajuste DATABASE_URL/credenciais
    npm install
    npm run db:init           # aplica schema.sql + seed.sql
-   npm run dev               # http://localhost:3001
+   npm run dev               # http://localhost:3006
    ```
 
 3. **Frontend**
