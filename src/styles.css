@@ -890,3 +890,24 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   color: var(--text-3);
   user-select: none;
 }
+
+/* StatCard: linha extra abaixo do delta (ex.: valorização em reais) */
+.stat-extra {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.stat-extra .label {
+  display: block;
+  font-size: 10.5px;
+  color: var(--text-3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}

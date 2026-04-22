@@ -1,6 +1,6 @@
 import { ArrowUpRight, TrendingDown, TrendingUp } from 'lucide-react'
 
-export default function StatCard({ title, dotColor, value, delta, trend = 'down' }) {
+export default function StatCard({ title, dotColor, value, delta, trend = 'down', extra }) {
   const TrendIcon = trend === 'down' ? TrendingDown : TrendingUp
   return (
     <div className="card">
@@ -18,6 +18,7 @@ export default function StatCard({ title, dotColor, value, delta, trend = 'down'
         <TrendIcon size={13} />
         <span>{delta}</span>
       </div>
+      {extra && <div className="stat-extra">{extra}</div>}
     </div>
   )
 }
