@@ -117,14 +117,29 @@ function parseScalar(kind, raw) {
     if (raw instanceof Date && !isNaN(raw)) return raw.toISOString().slice(0, 10)
     const s = String(raw).trim()
     if (!s) return null
+    // ISO (yyyy-mm-dd) — prefixo, aceita também yyyy-mm-ddTHH:mm:ss
     const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(s)
     if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`
+    // BR (dd/mm/yyyy)
     const br = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(s)
     if (br) return `${br[3]}-${br[2]}-${br[1]}`
+    // yyyymmdd sem separadores (ex.: 20260410)
+    const ymd = /^(\d{4})(\d{2})(\d{2})$/.exec(s)
+    if (ymd) {
+      const [, y, m, d] = ymd
+      if (+m >= 1 && +m <= 12 && +d >= 1 && +d <= 31) return `${y}-${m}-${d}`
+    }
+    // ddmmyyyy sem separadores (ex.: 10042026) — fallback
+    const dmy = /^(\d{2})(\d{2})(\d{4})$/.exec(s)
+    if (dmy) {
+      const [, d, m, y] = dmy
+      if (+m >= 1 && +m <= 12 && +d >= 1 && +d <= 31) return `${y}-${m}-${d}`
+    }
+    // Serial de data do Excel (valor numérico típico em 20000..80000)
     const n = Number(s)
     if (Number.isFinite(n) && n > 20000 && n < 80000) {
-      const d = XLSX.SSF.parse_date_code(n)
-      if (d) return `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`
+      const dd = XLSX.SSF.parse_date_code(n)
+      if (dd) return `${dd.y}-${String(dd.m).padStart(2, '0')}-${String(dd.d).padStart(2, '0')}`
     }
     return NaN
   }
