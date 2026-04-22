@@ -357,71 +357,81 @@ router.post('/import', (req, res, next) => {
   })
 })
 
-// METRICS: quantidade de itens onde valor_nota_fiscal < valor_negociado_compras
+// METRICS: comparação valor_nota_fiscal vs valor_negociado_compras
+// op = 'lt' (nf < neg) ou 'gt' (nf > neg).
+// Quando op='lt' a valorização é qtd * (neg - nf)  — redução paga vs negociado
+// Quando op='gt' a valorização é qtd * (nf - neg)  — sobrepreço pago vs negociado
 // Aceita filtro de período opcional: ?from=YYYY-MM-DD&to=YYYY-MM-DD
-// Quando algum dos dois é informado, filtra por data_emissao_nota_fiscal.
-router.get('/metrics/nf-menor-que-negociado', async (req, res, next) => {
-  try {
-    const ISO = /^\d{4}-\d{2}-\d{2}$/
-    const from = typeof req.query.from === 'string' && ISO.test(req.query.from) ? req.query.from : null
-    const to   = typeof req.query.to   === 'string' && ISO.test(req.query.to)   ? req.query.to   : null
+async function computeNfVsNegociado(op, { from, to }) {
+  const cmp = op === 'gt' ? '>' : '<'
+  const diff = op === 'gt'
+    ? '(valor_nota_fiscal - valor_negociado_compras)'
+    : '(valor_negociado_compras - valor_nota_fiscal)'
 
-    const params = []
-    const where = []
-    if (from) { params.push(from); where.push(`data_emissao_nota_fiscal >= $${params.length}`) }
-    if (to)   { params.push(to);   where.push(`data_emissao_nota_fiscal <= $${params.length}`) }
-    // Quando um filtro de período está ativo, linhas sem data são ignoradas.
-    if (where.length) where.push(`data_emissao_nota_fiscal IS NOT NULL`)
-    const whereSQL = where.length ? `WHERE ${where.join(' AND ')}` : ''
+  const params = []
+  const where = []
+  if (from) { params.push(from); where.push(`data_emissao_nota_fiscal >= $${params.length}`) }
+  if (to)   { params.push(to);   where.push(`data_emissao_nota_fiscal <= $${params.length}`) }
+  if (where.length) where.push(`data_emissao_nota_fiscal IS NOT NULL`)
+  const whereSQL = where.length ? `WHERE ${where.join(' AND ')}` : ''
 
-    const { rows } = await query(
-      `SELECT
-         COUNT(*) FILTER (
+  const { rows } = await query(
+    `SELECT
+       COUNT(*) FILTER (
+         WHERE valor_nota_fiscal IS NOT NULL
+           AND valor_negociado_compras IS NOT NULL
+           AND valor_nota_fiscal ${cmp} valor_negociado_compras
+       )::int AS count,
+       COUNT(*)::int AS total,
+       COALESCE(
+         SUM(quantidade_escriturada * ${diff}) FILTER (
            WHERE valor_nota_fiscal IS NOT NULL
              AND valor_negociado_compras IS NOT NULL
-             AND valor_nota_fiscal < valor_negociado_compras
-         )::int AS count,
-         COUNT(*)::int AS total,
-         COALESCE(
-           SUM(
-             quantidade_escriturada * (valor_negociado_compras - valor_nota_fiscal)
-           ) FILTER (
-             WHERE valor_nota_fiscal IS NOT NULL
-               AND valor_negociado_compras IS NOT NULL
-               AND quantidade_escriturada IS NOT NULL
-               AND valor_nota_fiscal < valor_negociado_compras
-           ),
-           0
-         )::numeric AS valorizacao,
-         COALESCE(
-           SUM(quantidade_escriturada * valor_negociado_compras)
-           FILTER (
-             WHERE quantidade_escriturada IS NOT NULL
-               AND valor_negociado_compras IS NOT NULL
-           ),
-           0
-         )::numeric AS valor_total
-       FROM entradas_fiscais
-       ${whereSQL}`,
-      params
-    )
-    const count = rows[0].count
-    const total = rows[0].total
-    const valorizacao = Number(rows[0].valorizacao)
-    const valorTotal  = Number(rows[0].valor_total)
-    const percent = total > 0 ? (count / total) * 100 : 0
-    const percentValorizacao = valorTotal > 0 ? (valorizacao / valorTotal) * 100 : 0
-    res.json({
-      count,
-      total,
-      percent,
-      valorizacao,
-      valorTotal,
-      percentValorizacao,
-      from,
-      to
-    })
-  } catch (err) { next(err) }
+             AND quantidade_escriturada IS NOT NULL
+             AND valor_nota_fiscal ${cmp} valor_negociado_compras
+         ),
+         0
+       )::numeric AS valorizacao,
+       COALESCE(
+         SUM(quantidade_escriturada * valor_negociado_compras)
+         FILTER (
+           WHERE quantidade_escriturada IS NOT NULL
+             AND valor_negociado_compras IS NOT NULL
+         ),
+         0
+       )::numeric AS valor_total
+     FROM entradas_fiscais
+     ${whereSQL}`,
+    params
+  )
+  const count       = rows[0].count
+  const total       = rows[0].total
+  const valorizacao = Number(rows[0].valorizacao)
+  const valorTotal  = Number(rows[0].valor_total)
+  const percent = total > 0 ? (count / total) * 100 : 0
+  const percentValorizacao = valorTotal > 0 ? (valorizacao / valorTotal) * 100 : 0
+  return {
+    count, total, percent,
+    valorizacao, valorTotal, percentValorizacao,
+    from: from ?? null, to: to ?? null
+  }
+}
+
+function readRange(req) {
+  const ISO = /^\d{4}-\d{2}-\d{2}$/
+  const from = typeof req.query.from === 'string' && ISO.test(req.query.from) ? req.query.from : null
+  const to   = typeof req.query.to   === 'string' && ISO.test(req.query.to)   ? req.query.to   : null
+  return { from, to }
+}
+
+router.get('/metrics/nf-menor-que-negociado', async (req, res, next) => {
+  try { res.json(await computeNfVsNegociado('lt', readRange(req))) }
+  catch (err) { next(err) }
+})
+
+router.get('/metrics/nf-maior-que-negociado', async (req, res, next) => {
+  try { res.json(await computeNfVsNegociado('gt', readRange(req))) }
+  catch (err) { next(err) }
 })
 
 // GET ONE
