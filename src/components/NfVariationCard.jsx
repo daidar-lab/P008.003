@@ -30,11 +30,20 @@ export default function NfVariationCard({
   dotColor = '#e5484d',
   range,
   valorizacaoLabel = 'Valorização',
-  trend = 'down'
+  trend = 'down',
+  maxPercent
 }) {
   const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown
   const validRange = range?.from && range?.to && range.from <= range.to
-  const query = validRange ? `?from=${range.from}&to=${range.to}` : ''
+  const qs = []
+  if (validRange) {
+    qs.push(`from=${encodeURIComponent(range.from)}`)
+    qs.push(`to=${encodeURIComponent(range.to)}`)
+  }
+  if (typeof maxPercent === 'number' && Number.isFinite(maxPercent) && maxPercent > 0) {
+    qs.push(`maxPercent=${encodeURIComponent(maxPercent)}`)
+  }
+  const query = qs.length ? `?${qs.join('&')}` : ''
   const { data: nf, loading } = useApi(`${endpoint}${query}`, {
     fallback: { count: 0, total: 0, percent: 0, valorizacao: 0, valorTotal: 0, percentValorizacao: 0 }
   })

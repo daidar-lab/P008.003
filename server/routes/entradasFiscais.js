@@ -361,8 +361,11 @@ router.post('/import', (req, res, next) => {
 // op = 'lt' (nf < neg) ou 'gt' (nf > neg).
 // Quando op='lt' a valorização é qtd * (neg - nf)  — redução paga vs negociado
 // Quando op='gt' a valorização é qtd * (nf - neg)  — sobrepreço pago vs negociado
-// Aceita filtro de período opcional: ?from=YYYY-MM-DD&to=YYYY-MM-DD
-async function computeNfVsNegociado(op, { from, to }) {
+// Aceita:
+//   ?from=YYYY-MM-DD&to=YYYY-MM-DD — filtro de período
+//   ?maxPercent=N                  — limita matches a diferenças de até N%
+//                                    (gt: nf <= neg*(1+N/100); lt: nf >= neg*(1-N/100))
+async function computeNfVsNegociado(op, { from, to, maxPercent }) {
   const cmp = op === 'gt' ? '>' : '<'
   const diff = op === 'gt'
     ? '(valor_nota_fiscal - valor_negociado_compras)'
@@ -375,20 +378,28 @@ async function computeNfVsNegociado(op, { from, to }) {
   if (where.length) where.push(`data_emissao_nota_fiscal IS NOT NULL`)
   const whereSQL = where.length ? `WHERE ${where.join(' AND ')}` : ''
 
+  // Predicado de match (count/valorizacao) — adiciona teto de tolerância se maxPercent vier
+  let matchPred = `valor_nota_fiscal IS NOT NULL
+                   AND valor_negociado_compras IS NOT NULL
+                   AND valor_nota_fiscal ${cmp} valor_negociado_compras`
+  if (typeof maxPercent === 'number' && Number.isFinite(maxPercent) && maxPercent > 0) {
+    const factor = op === 'gt' ? 1 + maxPercent / 100 : 1 - maxPercent / 100
+    params.push(factor)
+    const fParam = `$${params.length}`
+    if (op === 'gt') {
+      matchPred += ` AND valor_nota_fiscal <= valor_negociado_compras * ${fParam}`
+    } else {
+      matchPred += ` AND valor_nota_fiscal >= valor_negociado_compras * ${fParam}`
+    }
+  }
+
   const { rows } = await query(
     `SELECT
-       COUNT(*) FILTER (
-         WHERE valor_nota_fiscal IS NOT NULL
-           AND valor_negociado_compras IS NOT NULL
-           AND valor_nota_fiscal ${cmp} valor_negociado_compras
-       )::int AS count,
+       COUNT(*) FILTER (WHERE ${matchPred})::int AS count,
        COUNT(*)::int AS total,
        COALESCE(
          SUM(quantidade_escriturada * ${diff}) FILTER (
-           WHERE valor_nota_fiscal IS NOT NULL
-             AND valor_negociado_compras IS NOT NULL
-             AND quantidade_escriturada IS NOT NULL
-             AND valor_nota_fiscal ${cmp} valor_negociado_compras
+           WHERE ${matchPred} AND quantidade_escriturada IS NOT NULL
          ),
          0
        )::numeric AS valorizacao,
@@ -413,7 +424,8 @@ async function computeNfVsNegociado(op, { from, to }) {
   return {
     count, total, percent,
     valorizacao, valorTotal, percentValorizacao,
-    from: from ?? null, to: to ?? null
+    from: from ?? null, to: to ?? null,
+    maxPercent: maxPercent ?? null
   }
 }
 
@@ -421,7 +433,12 @@ function readRange(req) {
   const ISO = /^\d{4}-\d{2}-\d{2}$/
   const from = typeof req.query.from === 'string' && ISO.test(req.query.from) ? req.query.from : null
   const to   = typeof req.query.to   === 'string' && ISO.test(req.query.to)   ? req.query.to   : null
-  return { from, to }
+  let maxPercent
+  if (req.query.maxPercent !== undefined) {
+    const n = Number(req.query.maxPercent)
+    if (Number.isFinite(n) && n > 0 && n < 1000) maxPercent = n
+  }
+  return { from, to, maxPercent }
 }
 
 router.get('/metrics/nf-menor-que-negociado', async (req, res, next) => {
