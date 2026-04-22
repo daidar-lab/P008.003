@@ -35,6 +35,7 @@ export default function NfVariationCard({
   minPercent,
   codigoFilial,
   onClick,
+  onContextMenu,
   selected = false
 }) {
   const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown
@@ -75,9 +76,13 @@ export default function NfVariationCard({
       tabIndex={clickable ? 0 : undefined}
       aria-pressed={clickable ? selected : undefined}
       onClick={clickable ? onClick : undefined}
+      onContextMenu={typeof onContextMenu === 'function'
+        ? (e) => { e.preventDefault(); onContextMenu(e) }
+        : undefined}
       onKeyDown={clickable
         ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }
         : undefined}
+      title={typeof onContextMenu === 'function' ? 'Clique direito para ver documentos deste filtro' : undefined}
     >
       <div className="card-head">
         <span className="card-title">

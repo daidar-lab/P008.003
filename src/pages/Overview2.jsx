@@ -8,6 +8,7 @@ import SpentAmount from '../components/SpentAmount.jsx'
 import Spending from '../components/Spending.jsx'
 import Revenue from '../components/Revenue.jsx'
 import NfVariationCard from '../components/NfVariationCard.jsx'
+import DayDetailsModal from '../components/DayDetailsModal.jsx'
 import { useApi } from '../api.js'
 
 function toISODate(d) {
@@ -65,6 +66,8 @@ export default function Overview2() {
   const [customRange, setCustomRange] = useState(() => monthRange(0))
   const [selectedCard, setSelectedCard] = useState(null)
   const [codigoFilial, setCodigoFilial] = useState('')
+  // Right-click em um card abre o modal de detalhes focado naquela categoria.
+  const [detailsCtx, setDetailsCtx] = useState(null)
 
   const { data: filiais } = useApi('/filiais', { fallback: [] })
   const filiaisList = Array.isArray(filiais) ? filiais : []
@@ -110,6 +113,11 @@ export default function Overview2() {
             codigoFilial={filialCodigo}
             selected={selectedCard === c.key}
             onClick={() => toggle(c.key)}
+            onContextMenu={() => setDetailsCtx({
+              range: activeRange,
+              codigoFilial: filialCodigo,
+              filter: { ...c.filter, label: c.title, color: c.dotColor }
+            })}
           />
         ))}
       </section>
@@ -128,6 +136,15 @@ export default function Overview2() {
         <Spending />
         <Revenue />
       </section>
+
+      {detailsCtx && (
+        <DayDetailsModal
+          range={detailsCtx.range}
+          codigoFilial={detailsCtx.codigoFilial}
+          filter={detailsCtx.filter}
+          onClose={() => setDetailsCtx(null)}
+        />
+      )}
     </>
   )
 }

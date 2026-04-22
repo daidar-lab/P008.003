@@ -19,8 +19,10 @@ const fmtDateTime = (iso) => {
   }).format(d)
 }
 
-function buildQuery({ codigoFilial, filter }) {
+function buildQuery({ range, codigoFilial, filter }) {
   const parts = []
+  if (range?.from) parts.push(`from=${encodeURIComponent(range.from)}`)
+  if (range?.to)   parts.push(`to=${encodeURIComponent(range.to)}`)
   if (codigoFilial) parts.push(`codigoFilial=${encodeURIComponent(codigoFilial)}`)
   if (filter?.op === 'lt' || filter?.op === 'gt') {
     parts.push(`op=${filter.op}`)
@@ -34,7 +36,7 @@ function buildQuery({ codigoFilial, filter }) {
   return parts.length ? `?${parts.join('&')}` : ''
 }
 
-export default function DayDetailsModal({ date, codigoFilial, filter, onClose }) {
+export default function DayDetailsModal({ range, codigoFilial, filter, onClose }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -45,11 +47,18 @@ export default function DayDetailsModal({ date, codigoFilial, filter, onClose })
   const [newAuthor, setNewAuthor] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  const singleDay = range?.from && range?.from === range?.to
+  const headerLabel = singleDay
+    ? fmtDayLong(range.from)
+    : range?.from && range?.to
+      ? `${fmtDayLong(range.from)} — ${fmtDayLong(range.to)}`
+      : 'Todos os períodos'
+
   const loadItems = useCallback(async () => {
     setLoading(true)
     try {
-      const qs = buildQuery({ codigoFilial, filter })
-      const data = await apiGet(`/entradas-fiscais/dia/${date}${qs}`)
+      const qs = buildQuery({ range, codigoFilial, filter })
+      const data = await apiGet(`/entradas-fiscais/items${qs}`)
       setItems(Array.isArray(data) ? data : [])
       setError(null)
     } catch (e) {
@@ -57,7 +66,7 @@ export default function DayDetailsModal({ date, codigoFilial, filter, onClose })
     } finally {
       setLoading(false)
     }
-  }, [date, codigoFilial, filter])
+  }, [range?.from, range?.to, codigoFilial, filter])
 
   useEffect(() => { loadItems() }, [loadItems])
 
@@ -137,7 +146,12 @@ export default function DayDetailsModal({ date, codigoFilial, filter, onClose })
       <div className="modal modal-chart details-modal" role="dialog" aria-modal="true">
         <div className="modal-head chart-modal-head">
           <div>
-            <h2><CalendarDays size={16} style={{ verticalAlign: '-2px' }} /> Detalhes de {fmtDayLong(date)}</h2>
+            <h2>
+              <CalendarDays size={16} style={{ verticalAlign: '-2px' }} />{' '}
+              {filter?.label
+                ? <><span style={{ color: filter.color }}>{filter.label}</span> · {headerLabel}</>
+                : <>Detalhes de {headerLabel}</>}
+            </h2>
             <p>
               {loading ? 'Carregando…' : `${items.length} documento${items.length === 1 ? '' : 's'} fiscal(is)`}
               {filter?.label && <> · filtro: <strong>{filter.label}</strong></>}

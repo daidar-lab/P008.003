@@ -150,7 +150,7 @@ export default function TotalBalance({ range, filter, codigoFilial }) {
   // intervalo naquele mês e o endpoint volta a agrupar por dia.
   const [drillDown, setDrillDown] = useState(null)
   // Clique em coluna diária abre o modal de detalhes do dia.
-  const [detailsDate, setDetailsDate] = useState(null)
+  const [detailsDay, setDetailsDay] = useState(null)
 
   // Quando o intervalo externo muda, descarta drill-down antigo.
   useEffect(() => { setDrillDown(null) }, [range?.from, range?.to])
@@ -200,7 +200,7 @@ export default function TotalBalance({ range, filter, codigoFilial }) {
         const m = monthBounds(payload.date)
         if (m) setDrillDown({ from: m.from, to: m.to, label: m.label })
       } else {
-        setDetailsDate(payload.date)
+        setDetailsDay(payload.date)
       }
     },
     [granularity]
@@ -358,12 +358,12 @@ export default function TotalBalance({ range, filter, codigoFilial }) {
         </div>
       )}
 
-      {detailsDate && (
+      {detailsDay && (
         <DayDetailsModal
-          date={detailsDate}
+          range={{ from: detailsDay, to: detailsDay }}
           codigoFilial={codigoFilial}
           filter={filter}
-          onClose={() => setDetailsDate(null)}
+          onClose={() => setDetailsDay(null)}
         />
       )}
     </>

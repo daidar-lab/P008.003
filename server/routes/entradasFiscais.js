@@ -595,22 +595,23 @@ router.get('/metrics/variacao-diaria', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
-// DAY DETAILS: linhas de um dia específico com mesmos filtros de categoria/filial
-router.get('/dia/:date', async (req, res, next) => {
+// ITEM LIST: linhas de entradas_fiscais com filtros de período/categoria/filial
+// Serve tanto o clique numa coluna diária do Total Balance (from=to=date)
+// quanto o clique direito num card NF (range inteiro do período ativo).
+router.get('/items', async (req, res, next) => {
   try {
-    const date = String(req.params.date || '')
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return res.status(400).json({ error: 'invalid_date' })
-    }
-    const { maxPercent, minPercent, codigoFilial } = readRange(req)
+    const { from, to, maxPercent, minPercent, codigoFilial } = readRange(req)
     const op = req.query.op === 'lt' || req.query.op === 'gt' ? req.query.op : null
 
-    const params = [date]
+    const params = []
     const where = [
-      `codigo_tipo_entrada IN (SELECT codigo FROM tipos_entrada_saida WHERE considera_analise = TRUE)`,
-      `data_emissao_nota_fiscal = $1`
+      `codigo_tipo_entrada IN (SELECT codigo FROM tipos_entrada_saida WHERE considera_analise = TRUE)`
     ]
     if (codigoFilial) { params.push(codigoFilial); where.push(`codigo_filial = $${params.length}`) }
+    if (from) { params.push(from); where.push(`data_emissao_nota_fiscal >= $${params.length}`) }
+    if (to)   { params.push(to);   where.push(`data_emissao_nota_fiscal <= $${params.length}`) }
+    if (from || to) where.push(`data_emissao_nota_fiscal IS NOT NULL`)
+
     if (op) {
       const cmp = op === 'gt' ? '>' : '<'
       where.push(`valor_nota_fiscal ${cmp} valor_negociado_compras`)
@@ -641,7 +642,8 @@ router.get('/dia/:date', async (req, res, next) => {
             GROUP BY entrada_fiscal_id
          ) j ON j.entrada_fiscal_id = ef.id
          WHERE ${where.join(' AND ')}
-         ORDER BY ef.id ASC`,
+         ORDER BY ef.data_emissao_nota_fiscal ASC NULLS LAST, ef.id ASC
+         LIMIT 2000`,
       params
     )
     res.json(rows.map((r) => ({
