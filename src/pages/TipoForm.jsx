@@ -4,6 +4,9 @@ export default function TipoForm({ initial, submitting, onCancel, onSave }) {
   const editing = Boolean(initial?.id)
   const [codigo, setCodigo] = useState(initial?.codigo ?? '')
   const [descricao, setDescricao] = useState(initial?.descricao ?? '')
+  const [consideraAnalise, setConsideraAnalise] = useState(
+    initial?.consideraAnalise ?? true
+  )
   const [errors, setErrors] = useState({})
   const [banner, setBanner] = useState(null)
   const firstRef = useRef(null)
@@ -34,7 +37,8 @@ export default function TipoForm({ initial, submitting, onCancel, onSave }) {
 
     const result = await onSave({
       codigo: codigo.trim(),
-      descricao: descricao.trim()
+      descricao: descricao.trim(),
+      consideraAnalise
     })
     if (result && !result.ok) {
       setBanner(result.message || 'Falha ao salvar')
@@ -47,7 +51,7 @@ export default function TipoForm({ initial, submitting, onCancel, onSave }) {
       <form className="modal" onSubmit={handleSubmit}>
         <div className="modal-head">
           <h2>{editing ? 'Editar tipo' : 'Novo tipo de entrada/saída'}</h2>
-          <p>Informe o código e a descrição do tipo.</p>
+          <p>Informe o código, a descrição e se o tipo entra na análise.</p>
         </div>
 
         <div className="modal-body">
@@ -86,6 +90,24 @@ export default function TipoForm({ initial, submitting, onCancel, onSave }) {
               <span>{descricao.length}/250</span>
             </div>
           </div>
+
+          <label className="switch-field" htmlFor="considera-analise">
+            <input
+              id="considera-analise"
+              type="checkbox"
+              checked={consideraAnalise}
+              onChange={(e) => setConsideraAnalise(e.target.checked)}
+            />
+            <span className="switch-track"><span className="switch-thumb" /></span>
+            <span className="switch-label">
+              <strong>Considerar na análise</strong>
+              <small>
+                {consideraAnalise
+                  ? 'Lançamentos deste tipo entram nos relatórios de análise.'
+                  : 'Lançamentos deste tipo ficam de fora dos relatórios de análise.'}
+              </small>
+            </span>
+          </label>
         </div>
 
         <div className="modal-foot">

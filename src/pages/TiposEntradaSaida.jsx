@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Plus, Pencil, Trash2, Search, RefreshCw } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, RefreshCw, Check, X } from 'lucide-react'
 import { apiGet, apiSend } from '../api.js'
 import TipoForm from './TipoForm.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
@@ -113,13 +113,14 @@ export default function TiposEntradaSaida() {
               <th className="col-id">ID</th>
               <th className="col-code">Código</th>
               <th>Descrição</th>
+              <th className="col-flag" title="Considerar na análise">Análise</th>
               <th className="col-actions">Ações</th>
             </tr>
           </thead>
           <tbody>
             {!loading && filtered.length === 0 && (
               <tr>
-                <td colSpan={4}>
+                <td colSpan={5}>
                   <div className="empty-state">
                     {search ? 'Nenhum registro encontrado para essa busca.'
                            : 'Nenhum tipo cadastrado ainda. Clique em "Novo" para criar o primeiro.'}
@@ -133,6 +134,11 @@ export default function TiposEntradaSaida() {
                 <td className="col-id">#{it.id}</td>
                 <td className="col-code">{it.codigo}</td>
                 <td>{it.descricao}</td>
+                <td className="col-flag">
+                  {it.consideraAnalise
+                    ? <span className="pill pill-on" title="Considera na análise"><Check size={12} /> Sim</span>
+                    : <span className="pill pill-off" title="Não considera na análise"><X size={12} /> Não</span>}
+                </td>
                 <td className="col-actions">
                   <button
                     className="row-action"

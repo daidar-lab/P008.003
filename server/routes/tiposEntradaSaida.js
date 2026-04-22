@@ -3,21 +3,31 @@ import { query } from '../db.js'
 
 const router = Router()
 
-function validate(body, { partial = false } = {}) {
+function parseBool(v, fallback = true) {
+  if (v === undefined || v === null) return fallback
+  if (typeof v === 'boolean') return v
+  if (typeof v === 'number') return v !== 0
+  if (typeof v === 'string') {
+    const s = v.trim().toLowerCase()
+    if (['true', '1', 'sim', 'yes', 'on'].includes(s)) return true
+    if (['false', '0', 'nao', 'não', 'no', 'off'].includes(s)) return false
+  }
+  return fallback
+}
+
+function validate(body) {
   const errors = {}
   const codigo = typeof body?.codigo === 'string' ? body.codigo.trim() : ''
   const descricao = typeof body?.descricao === 'string' ? body.descricao.trim() : ''
+  const consideraAnalise = parseBool(body?.consideraAnalise, true)
 
-  if (!partial || 'codigo' in (body || {})) {
-    if (!codigo) errors.codigo = 'Código é obrigatório'
-    else if (codigo.length > 50) errors.codigo = 'Código deve ter até 50 caracteres'
-  }
-  if (!partial || 'descricao' in (body || {})) {
-    if (!descricao) errors.descricao = 'Descrição é obrigatória'
-    else if (descricao.length > 250) errors.descricao = 'Descrição deve ter até 250 caracteres'
-  }
+  if (!codigo) errors.codigo = 'Código é obrigatório'
+  else if (codigo.length > 50) errors.codigo = 'Código deve ter até 50 caracteres'
 
-  return { errors, codigo, descricao }
+  if (!descricao) errors.descricao = 'Descrição é obrigatória'
+  else if (descricao.length > 250) errors.descricao = 'Descrição deve ter até 250 caracteres'
+
+  return { errors, codigo, descricao, consideraAnalise }
 }
 
 function mapRow(r) {
@@ -25,10 +35,13 @@ function mapRow(r) {
     id: r.id,
     codigo: r.codigo,
     descricao: r.descricao,
+    consideraAnalise: r.considera_analise,
     createdAt: r.created_at,
     updatedAt: r.updated_at
   }
 }
+
+const COLS = 'id, codigo, descricao, considera_analise, created_at, updated_at'
 
 // LIST
 router.get('/', async (req, res, next) => {
@@ -41,7 +54,7 @@ router.get('/', async (req, res, next) => {
       where = `WHERE codigo ILIKE $1 OR descricao ILIKE $1`
     }
     const { rows } = await query(
-      `SELECT id, codigo, descricao, created_at, updated_at
+      `SELECT ${COLS}
        FROM tipos_entrada_saida
        ${where}
        ORDER BY id ASC`,
@@ -59,9 +72,7 @@ router.get('/:id', async (req, res, next) => {
       return res.status(400).json({ error: 'invalid_id' })
     }
     const { rows } = await query(
-      `SELECT id, codigo, descricao, created_at, updated_at
-       FROM tipos_entrada_saida
-       WHERE id = $1`,
+      `SELECT ${COLS} FROM tipos_entrada_saida WHERE id = $1`,
       [id]
     )
     if (!rows.length) return res.status(404).json({ error: 'not_found' })
@@ -72,15 +83,15 @@ router.get('/:id', async (req, res, next) => {
 // CREATE
 router.post('/', async (req, res, next) => {
   try {
-    const { errors, codigo, descricao } = validate(req.body)
+    const { errors, codigo, descricao, consideraAnalise } = validate(req.body)
     if (Object.keys(errors).length) {
       return res.status(400).json({ error: 'validation_error', fields: errors })
     }
     const { rows } = await query(
-      `INSERT INTO tipos_entrada_saida (codigo, descricao)
-       VALUES ($1, $2)
-       RETURNING id, codigo, descricao, created_at, updated_at`,
-      [codigo, descricao]
+      `INSERT INTO tipos_entrada_saida (codigo, descricao, considera_analise)
+       VALUES ($1, $2, $3)
+       RETURNING ${COLS}`,
+      [codigo, descricao, consideraAnalise]
     )
     res.status(201).json(mapRow(rows[0]))
   } catch (err) {
@@ -101,16 +112,16 @@ router.put('/:id', async (req, res, next) => {
     if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({ error: 'invalid_id' })
     }
-    const { errors, codigo, descricao } = validate(req.body)
+    const { errors, codigo, descricao, consideraAnalise } = validate(req.body)
     if (Object.keys(errors).length) {
       return res.status(400).json({ error: 'validation_error', fields: errors })
     }
     const { rows } = await query(
       `UPDATE tipos_entrada_saida
-       SET codigo = $1, descricao = $2, updated_at = NOW()
-       WHERE id = $3
-       RETURNING id, codigo, descricao, created_at, updated_at`,
-      [codigo, descricao, id]
+       SET codigo = $1, descricao = $2, considera_analise = $3, updated_at = NOW()
+       WHERE id = $4
+       RETURNING ${COLS}`,
+      [codigo, descricao, consideraAnalise, id]
     )
     if (!rows.length) return res.status(404).json({ error: 'not_found' })
     res.json(mapRow(rows[0]))

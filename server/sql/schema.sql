@@ -56,12 +56,17 @@ CREATE TABLE IF NOT EXISTS revenue_totals (
 
 -- Cadastros: tipos de entrada e saída
 CREATE TABLE IF NOT EXISTS tipos_entrada_saida (
-  id         SERIAL PRIMARY KEY,
-  codigo     VARCHAR(50)  NOT NULL UNIQUE,
-  descricao  VARCHAR(250) NOT NULL,
-  created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+  id                SERIAL PRIMARY KEY,
+  codigo            VARCHAR(50)  NOT NULL UNIQUE,
+  descricao         VARCHAR(250) NOT NULL,
+  considera_analise BOOLEAN      NOT NULL DEFAULT TRUE,
+  created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+
+-- Migração idempotente para bancos que já tinham a tabela sem a coluna
+ALTER TABLE tipos_entrada_saida
+  ADD COLUMN IF NOT EXISTS considera_analise BOOLEAN NOT NULL DEFAULT TRUE;
 
 CREATE INDEX IF NOT EXISTS tipos_entrada_saida_descricao_idx
   ON tipos_entrada_saida (descricao);
