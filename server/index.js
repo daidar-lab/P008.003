@@ -12,6 +12,7 @@ import spending from './routes/spending.js'
 import revenue from './routes/revenue.js'
 import tiposEntradaSaida from './routes/tiposEntradaSaida.js'
 import produtos from './routes/produtos.js'
+import entradasFiscais from './routes/entradasFiscais.js'
 
 const app = express()
 const PORT = Number(process.env.PORT || 3001)
@@ -36,6 +37,7 @@ app.use('/api/spending', spending)
 app.use('/api/revenue', revenue)
 app.use('/api/tipos-entrada-saida', tiposEntradaSaida)
 app.use('/api/produtos', produtos)
+app.use('/api/entradas-fiscais', entradasFiscais)
 
 app.use((req, res) => {
   res.status(404).json({ error: 'not_found', path: req.path })

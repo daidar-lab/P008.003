@@ -3,10 +3,12 @@ import Sidebar from './components/Sidebar.jsx'
 import Overview from './pages/Overview.jsx'
 import TiposEntradaSaida from './pages/TiposEntradaSaida.jsx'
 import Produtos from './pages/Produtos.jsx'
+import EntradasFiscais from './pages/EntradasFiscais.jsx'
 
 const ROUTES = {
   'tipos-entrada-saida': TiposEntradaSaida,
   'produtos': Produtos,
+  'entradas-fiscais': EntradasFiscais,
   'overview': Overview
 }
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   Home, Package, Bell, Search, FileBarChart, Plus, MoreVertical,
-  FolderOpen, ChevronDown, ChevronRight, ArrowRightLeft, ShoppingBag
+  FolderOpen, ChevronDown, ChevronRight, ArrowRightLeft, ShoppingBag, Receipt
 } from 'lucide-react'
 
 const primary = [
@@ -14,7 +14,8 @@ const primary = [
 
 const cadastros = [
   { icon: ArrowRightLeft, label: 'Tipo de Entrada e Saída', route: 'tipos-entrada-saida' },
-  { icon: ShoppingBag,    label: 'Produtos',                route: 'produtos' }
+  { icon: ShoppingBag,    label: 'Produtos',                route: 'produtos' },
+  { icon: Receipt,        label: 'Entradas Fiscais',        route: 'entradas-fiscais' }
 ]
 
 const dashboard = [

@@ -2,8 +2,33 @@
 
 TRUNCATE stats, balance_buckets, performance_weeks, spent_shares,
          spending_categories, revenue_channels, revenue_totals,
-         tipos_entrada_saida, produtos
+         tipos_entrada_saida, produtos, entradas_fiscais
 RESTART IDENTITY;
+
+INSERT INTO entradas_fiscais (
+  codigo_filial, item_documento_fiscal, codigo_produto, descricao_produto,
+  numero_documento_fiscal, serie_documento_fiscal,
+  numero_pedido_compras, tipo_pedido_compras,
+  data_emissao_nota_fiscal,
+  quantidade_escriturada, quantidade_pedido_compras,
+  valor_nota_fiscal, valor_negociado_compras, valor_entrada_nf,
+  codigo_tipo_entrada, descricao_tipo_entrada
+) VALUES
+  ('001', '001', 'PRD-001', 'Camiseta básica branca',
+   '000123456', '1', 'PC-00042', 'Normal',
+   '2026-04-10',
+   100.000, 100.000, 3500.0000, 3500.0000, 3500.0000,
+   'ENT-001', 'Venda à vista'),
+  ('001', '002', 'PRD-003', 'Calça jeans azul',
+   '000123456', '1', 'PC-00042', 'Normal',
+   '2026-04-10',
+   50.000,  50.000, 6250.0000, 6000.0000, 6250.0000,
+   'ENT-002', 'Venda a prazo'),
+  ('002', '001', 'PRD-005', 'Jaqueta corta-vento',
+   '000987654', '2', 'PC-00099', 'Urgente',
+   '2026-04-18',
+   30.000,  30.000, 9000.0000, 9000.0000, 9000.0000,
+   'ENT-003', 'Recebimento de cliente');
 
 INSERT INTO produtos (codigo, descricao) VALUES
   ('PRD-001', 'Camiseta básica branca'),

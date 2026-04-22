@@ -82,3 +82,33 @@ CREATE TABLE IF NOT EXISTS produtos (
 
 CREATE INDEX IF NOT EXISTS produtos_descricao_idx
   ON produtos (descricao);
+
+-- Cadastros: entradas fiscais (itens de NF de entrada)
+CREATE TABLE IF NOT EXISTS entradas_fiscais (
+  id                          SERIAL PRIMARY KEY,
+  codigo_filial               VARCHAR(20)  NOT NULL,
+  item_documento_fiscal       VARCHAR(10)  NOT NULL,
+  codigo_produto              VARCHAR(50)  NOT NULL,
+  descricao_produto           VARCHAR(250),
+  numero_documento_fiscal     VARCHAR(20)  NOT NULL,
+  serie_documento_fiscal      VARCHAR(10),
+  numero_pedido_compras       VARCHAR(30),
+  tipo_pedido_compras         VARCHAR(20),
+  data_emissao_nota_fiscal    DATE,
+  quantidade_escriturada      NUMERIC(18,4),
+  quantidade_pedido_compras   NUMERIC(18,4),
+  valor_nota_fiscal           NUMERIC(18,4),
+  valor_negociado_compras     NUMERIC(18,4),
+  valor_entrada_nf            NUMERIC(18,4),
+  codigo_tipo_entrada         VARCHAR(50),
+  descricao_tipo_entrada      VARCHAR(250),
+  created_at                  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at                  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS entradas_fiscais_nf_idx
+  ON entradas_fiscais (codigo_filial, numero_documento_fiscal, serie_documento_fiscal);
+CREATE INDEX IF NOT EXISTS entradas_fiscais_produto_idx
+  ON entradas_fiscais (codigo_produto);
+CREATE INDEX IF NOT EXISTS entradas_fiscais_data_idx
+  ON entradas_fiscais (data_emissao_nota_fiscal);
