@@ -639,7 +639,45 @@ router.get('/metrics/variacao-por-grupo', async (req, res, next) => {
            WHEN ef.valor_nota_fiscal > ef.valor_negociado_compras
            THEN ef.quantidade_escriturada * (ef.valor_nota_fiscal - ef.valor_negociado_compras)
            ELSE 0 END), 0)::numeric AS overspend,
-         COALESCE(SUM(ef.quantidade_escriturada * ef.valor_negociado_compras), 0)::numeric AS valor_total
+         COALESCE(SUM(ef.quantidade_escriturada * ef.valor_negociado_compras), 0)::numeric AS valor_total,
+
+         -- cenário 1: NF < Negociado
+         COUNT(*) FILTER (
+           WHERE ef.valor_nota_fiscal < ef.valor_negociado_compras
+         )::int AS lt_count,
+         COALESCE(SUM(ef.quantidade_escriturada *
+                      (ef.valor_negociado_compras - ef.valor_nota_fiscal))
+                  FILTER (WHERE ef.valor_nota_fiscal < ef.valor_negociado_compras),
+                  0)::numeric AS lt_value,
+
+         -- cenário 2: NF > Negociado (todos)
+         COUNT(*) FILTER (
+           WHERE ef.valor_nota_fiscal > ef.valor_negociado_compras
+         )::int AS gt_count,
+         COALESCE(SUM(ef.quantidade_escriturada *
+                      (ef.valor_nota_fiscal - ef.valor_negociado_compras))
+                  FILTER (WHERE ef.valor_nota_fiscal > ef.valor_negociado_compras),
+                  0)::numeric AS gt_value,
+
+         -- cenário 3: NF > Negociado (até 2%)
+         COUNT(*) FILTER (
+           WHERE ef.valor_nota_fiscal > ef.valor_negociado_compras
+             AND ef.valor_nota_fiscal <= ef.valor_negociado_compras * 1.02
+         )::int AS gt_le2_count,
+         COALESCE(SUM(ef.quantidade_escriturada *
+                      (ef.valor_nota_fiscal - ef.valor_negociado_compras))
+                  FILTER (WHERE ef.valor_nota_fiscal > ef.valor_negociado_compras
+                            AND ef.valor_nota_fiscal <= ef.valor_negociado_compras * 1.02),
+                  0)::numeric AS gt_le2_value,
+
+         -- cenário 4: NF > Negociado (acima de 2%)
+         COUNT(*) FILTER (
+           WHERE ef.valor_nota_fiscal > ef.valor_negociado_compras * 1.02
+         )::int AS gt_gt2_count,
+         COALESCE(SUM(ef.quantidade_escriturada *
+                      (ef.valor_nota_fiscal - ef.valor_negociado_compras))
+                  FILTER (WHERE ef.valor_nota_fiscal > ef.valor_negociado_compras * 1.02),
+                  0)::numeric AS gt_gt2_value
        FROM entradas_fiscais ef
        LEFT JOIN grupos_produtos gp ON gp.id = ef.grupo_produto_id
        WHERE ${where.join(' AND ')}
@@ -671,7 +709,13 @@ router.get('/metrics/variacao-por-grupo', async (req, res, next) => {
         count: r.count,
         savings, overspend, net,
         valorTotal: valorTot,
-        percentValorizacao: valorTot > 0 ? (Math.abs(net) / valorTot) * 100 : 0
+        percentValorizacao: valorTot > 0 ? (Math.abs(net) / valorTot) * 100 : 0,
+        scenarios: {
+          lt:    { count: r.lt_count,    value: Number(r.lt_value) },
+          gt:    { count: r.gt_count,    value: Number(r.gt_value) },
+          gtLe2: { count: r.gt_le2_count, value: Number(r.gt_le2_value) },
+          gtGt2: { count: r.gt_gt2_count, value: Number(r.gt_gt2_value) }
+        }
       }
     })
 
@@ -681,8 +725,24 @@ router.get('/metrics/variacao-por-grupo', async (req, res, next) => {
       acc.overspend  += g.overspend
       acc.net        += g.net
       acc.valorTotal += g.valorTotal
+      acc.scenarios.lt.count    += g.scenarios.lt.count
+      acc.scenarios.lt.value    += g.scenarios.lt.value
+      acc.scenarios.gt.count    += g.scenarios.gt.count
+      acc.scenarios.gt.value    += g.scenarios.gt.value
+      acc.scenarios.gtLe2.count += g.scenarios.gtLe2.count
+      acc.scenarios.gtLe2.value += g.scenarios.gtLe2.value
+      acc.scenarios.gtGt2.count += g.scenarios.gtGt2.count
+      acc.scenarios.gtGt2.value += g.scenarios.gtGt2.value
       return acc
-    }, { count: 0, savings: 0, overspend: 0, net: 0, valorTotal: 0 })
+    }, {
+      count: 0, savings: 0, overspend: 0, net: 0, valorTotal: 0,
+      scenarios: {
+        lt:    { count: 0, value: 0 },
+        gt:    { count: 0, value: 0 },
+        gtLe2: { count: 0, value: 0 },
+        gtGt2: { count: 0, value: 0 }
+      }
+    })
 
     res.json({
       from: from ?? null, to: to ?? null,

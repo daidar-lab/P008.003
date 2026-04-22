@@ -242,7 +242,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   grid-template-columns: 1fr 1.25fr;
 }
 .grid.row-3 {
-  grid-template-columns: 1fr 1.4fr 1fr;
+  grid-template-columns: 1fr 1fr;
+}
+.grid.row-grupos {
+  grid-template-columns: 1fr;
 }
 
 /* ---------- Card ---------- */
@@ -1449,4 +1452,45 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   font-size: 10.5px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* Cabeçalho agrupado da tabela Variação por Grupo (2 linhas) */
+.grupo-variacao-table thead tr:first-child .scen-group-head {
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-3);
+  padding: 0 10px 6px;
+  letter-spacing: 0.08em;
+}
+.grupo-variacao-table thead tr:nth-child(2) th {
+  padding: 6px 10px 8px;
+}
+.scen-col-head {
+  font-size: 10.5px;
+  display: table-cell;
+  white-space: nowrap;
+}
+.scen-col-head .dot {
+  width: 6px; height: 6px;
+  margin-right: 5px;
+  vertical-align: baseline;
+}
+
+/* Cell de cada cenário: valor em cima, nº itens embaixo */
+.scen-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.scen-cell strong {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.scen-cell small {
+  font-size: 10.5px;
+  color: var(--text-3);
+  font-weight: 500;
 }

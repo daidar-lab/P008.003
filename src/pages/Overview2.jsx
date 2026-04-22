@@ -133,8 +133,11 @@ export default function Overview2() {
 
       <section className="grid row-3">
         <SpentAmount />
-        <VariacaoPorGrupo range={activeRange} codigoFilial={filialCodigo} />
         <Revenue />
+      </section>
+
+      <section className="grid row-grupos">
+        <VariacaoPorGrupo range={activeRange} codigoFilial={filialCodigo} />
       </section>
 
       {detailsCtx && (
