@@ -1,13 +1,19 @@
+import { useState } from 'react'
 import {
-  Home, Package, Bell, Search, FileBarChart, Plus, MoreVertical
+  Home, Package, Bell, Search, FileBarChart, Plus, MoreVertical,
+  FolderOpen, ChevronDown, ChevronRight, ArrowRightLeft
 } from 'lucide-react'
 
-const nav = [
-  { icon: Home, label: 'Home', active: true },
+const primary = [
+  { icon: Home, label: 'Home', route: 'overview' },
   { icon: Package, label: 'Inventory' },
   { icon: Bell, label: 'Notification', kbd: '⌘N' },
   { icon: Search, label: 'Search', kbd: '⌘S' },
   { icon: FileBarChart, label: 'Report Builder' }
+]
+
+const cadastros = [
+  { icon: ArrowRightLeft, label: 'Tipo de Entrada e Saída', route: 'tipos-entrada-saida' }
 ]
 
 const dashboard = [
@@ -18,7 +24,10 @@ const dashboard = [
   { label: 'Marketing', color: '#e5484d' }
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ route, onNavigate }) {
+  const cadastrosActive = cadastros.some(c => c.route === route)
+  const [openCadastros, setOpenCadastros] = useState(cadastrosActive)
+
   return (
     <aside className="sidebar">
       <div className="logo">
@@ -27,13 +36,46 @@ export default function Sidebar() {
       </div>
 
       <nav className="nav">
-        {nav.map((item) => (
-          <button key={item.label} className={`nav-item ${item.active ? 'active' : ''}`}>
-            <item.icon size={16} strokeWidth={1.8} />
-            <span>{item.label}</span>
-            {item.kbd && <span className="kbd">{item.kbd}</span>}
-          </button>
-        ))}
+        {primary.map((item) => {
+          const active = item.route && item.route === route
+          return (
+            <button
+              key={item.label}
+              className={`nav-item ${active ? 'active' : ''}`}
+              onClick={() => item.route && onNavigate(item.route)}
+            >
+              <item.icon size={16} strokeWidth={1.8} />
+              <span>{item.label}</span>
+              {item.kbd && <span className="kbd">{item.kbd}</span>}
+            </button>
+          )
+        })}
+
+        <button
+          className={`nav-item ${cadastrosActive ? 'active' : ''}`}
+          onClick={() => setOpenCadastros((v) => !v)}
+        >
+          <FolderOpen size={16} strokeWidth={1.8} />
+          <span>Cadastros</span>
+          <span className="kbd" style={{ display: 'inline-flex' }}>
+            {openCadastros ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </span>
+        </button>
+
+        {openCadastros && (
+          <div className="nav-subgroup">
+            {cadastros.map((item) => (
+              <button
+                key={item.label}
+                className={`nav-item sub ${item.route === route ? 'active' : ''}`}
+                onClick={() => onNavigate(item.route)}
+              >
+                <item.icon size={14} strokeWidth={1.8} />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </nav>
 
       <div className="nav-section">My dashboard</div>

@@ -1,0 +1,200 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Plus, Pencil, Trash2, Search, RefreshCw } from 'lucide-react'
+import { apiGet } from '../api.js'
+import TipoForm from './TipoForm.jsx'
+import ConfirmDialog from '../components/ConfirmDialog.jsx'
+
+const ENDPOINT = '/tipos-entrada-saida'
+const BASE = import.meta.env.VITE_API_BASE || '/api'
+
+async function apiSend(method, path, body) {
+  const res = await fetch(`${BASE}${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined
+  })
+  if (res.status === 204) return null
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const err = new Error(data.message || data.error || `HTTP ${res.status}`)
+    err.status = res.status
+    err.fields = data.fields
+    throw err
+  }
+  return data
+}
+
+export default function TiposEntradaSaida() {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [search, setSearch] = useState('')
+  const [editing, setEditing] = useState(null)  // null | {} (novo) | registro
+  const [deleting, setDeleting] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await apiGet(ENDPOINT)
+      setItems(data)
+      setError(null)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return items
+    return items.filter(i =>
+      i.codigo.toLowerCase().includes(q) ||
+      i.descricao.toLowerCase().includes(q)
+    )
+  }, [items, search])
+
+  async function handleSave(payload) {
+    setSubmitting(true)
+    try {
+      if (editing?.id) {
+        await apiSend('PUT', `${ENDPOINT}/${editing.id}`, payload)
+      } else {
+        await apiSend('POST', ENDPOINT, payload)
+      }
+      setEditing(null)
+      await load()
+      return { ok: true }
+    } catch (e) {
+      return { ok: false, message: e.message, fields: e.fields }
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleting) return
+    setSubmitting(true)
+    try {
+      await apiSend('DELETE', `${ENDPOINT}/${deleting.id}`)
+      setDeleting(null)
+      await load()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="page-header">
+        <div>
+          <div className="crumbs">Cadastros</div>
+          <h1>Tipo de Entrada e Saída</h1>
+        </div>
+        <div className="actions">
+          <button className="btn btn-ghost" onClick={load} aria-label="Recarregar">
+            <RefreshCw size={14} />
+          </button>
+          <button className="btn btn-primary" onClick={() => setEditing({})}>
+            <Plus size={15} strokeWidth={2.2} />
+            <span>Novo</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="toolbar">
+          <label className="search-input">
+            <Search size={14} />
+            <input
+              type="search"
+              placeholder="Buscar por código ou descrição"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </label>
+          <span className="count">
+            {loading ? 'Carregando…' : `${filtered.length} registro${filtered.length === 1 ? '' : 's'}`}
+          </span>
+        </div>
+
+        {error && <div className="banner">Falha ao carregar: {error}</div>}
+
+        <table className="crud-table">
+          <thead>
+            <tr>
+              <th className="col-id">ID</th>
+              <th className="col-code">Código</th>
+              <th>Descrição</th>
+              <th className="col-actions">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {!loading && filtered.length === 0 && (
+              <tr>
+                <td colSpan={4}>
+                  <div className="empty-state">
+                    {search ? 'Nenhum registro encontrado para essa busca.'
+                           : 'Nenhum tipo cadastrado ainda. Clique em "Novo" para criar o primeiro.'}
+                  </div>
+                </td>
+              </tr>
+            )}
+
+            {filtered.map((it) => (
+              <tr key={it.id}>
+                <td className="col-id">#{it.id}</td>
+                <td className="col-code">{it.codigo}</td>
+                <td>{it.descricao}</td>
+                <td className="col-actions">
+                  <button
+                    className="row-action"
+                    aria-label="Editar"
+                    title="Editar"
+                    onClick={() => setEditing(it)}
+                  >
+                    <Pencil size={15} />
+                  </button>
+                  <button
+                    className="row-action danger"
+                    aria-label="Excluir"
+                    title="Excluir"
+                    onClick={() => setDeleting(it)}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {editing && (
+        <TipoForm
+          initial={editing}
+          submitting={submitting}
+          onCancel={() => setEditing(null)}
+          onSave={handleSave}
+        />
+      )}
+
+      {deleting && (
+        <ConfirmDialog
+          title="Excluir registro"
+          message={<>Tem certeza que deseja excluir <strong>{deleting.codigo} — {deleting.descricao}</strong>? Essa ação não pode ser desfeita.</>}
+          confirmLabel="Excluir"
+          danger
+          submitting={submitting}
+          onCancel={() => setDeleting(null)}
+          onConfirm={handleDelete}
+        />
+      )}
+    </>
+  )
+}

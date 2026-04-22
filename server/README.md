@@ -63,6 +63,11 @@ Saída esperada: `▲ Vento API on http://localhost:3006`
 | GET    | `/api/spent-amount`   | Donut 72% (Marketing x Operations)              |
 | GET    | `/api/spending`       | Tabela de categorias                            |
 | GET    | `/api/revenue`        | Gauge Online/Retail/Wholesale + total           |
+| GET    | `/api/tipos-entrada-saida`       | Lista de tipos (filtro `?q=`)        |
+| GET    | `/api/tipos-entrada-saida/:id`   | Busca um tipo por ID                 |
+| POST   | `/api/tipos-entrada-saida`       | Cria `{ codigo, descricao }`         |
+| PUT    | `/api/tipos-entrada-saida/:id`   | Atualiza `{ codigo, descricao }`     |
+| DELETE | `/api/tipos-entrada-saida/:id`   | Remove um tipo                       |
 
 Todas respondem JSON, já no shape consumido pelos componentes React.
 

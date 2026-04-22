@@ -9,6 +9,7 @@ import performance from './routes/performance.js'
 import spentAmount from './routes/spentAmount.js'
 import spending from './routes/spending.js'
 import revenue from './routes/revenue.js'
+import tiposEntradaSaida from './routes/tiposEntradaSaida.js'
 
 const app = express()
 const PORT = Number(process.env.PORT || 3006)
@@ -31,6 +32,7 @@ app.use('/api/performance', performance)
 app.use('/api/spent-amount', spentAmount)
 app.use('/api/spending', spending)
 app.use('/api/revenue', revenue)
+app.use('/api/tipos-entrada-saida', tiposEntradaSaida)
 
 app.use((req, res) => {
   res.status(404).json({ error: 'not_found', path: req.path })

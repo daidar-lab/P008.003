@@ -1,8 +1,17 @@
 -- Vento dashboard seed data
 
 TRUNCATE stats, balance_buckets, performance_weeks, spent_shares,
-         spending_categories, revenue_channels, revenue_totals
+         spending_categories, revenue_channels, revenue_totals,
+         tipos_entrada_saida
 RESTART IDENTITY;
+
+INSERT INTO tipos_entrada_saida (codigo, descricao) VALUES
+  ('ENT-001', 'Venda à vista'),
+  ('ENT-002', 'Venda a prazo'),
+  ('ENT-003', 'Recebimento de cliente'),
+  ('SAI-001', 'Pagamento a fornecedor'),
+  ('SAI-002', 'Folha de pagamento'),
+  ('SAI-003', 'Despesa administrativa');
 
 INSERT INTO stats (metric_key, title, dot_color, value, delta_percent, trend) VALUES
   ('total_views', 'Total views', '#e5484d', 253056, 12, 'down'),

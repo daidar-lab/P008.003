@@ -53,3 +53,15 @@ CREATE TABLE IF NOT EXISTS revenue_totals (
   total   NUMERIC NOT NULL,
   CHECK (id = 1)
 );
+
+-- Cadastros: tipos de entrada e saída
+CREATE TABLE IF NOT EXISTS tipos_entrada_saida (
+  id         SERIAL PRIMARY KEY,
+  codigo     VARCHAR(50)  NOT NULL UNIQUE,
+  descricao  VARCHAR(250) NOT NULL,
+  created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS tipos_entrada_saida_descricao_idx
+  ON tipos_entrada_saida (descricao);
