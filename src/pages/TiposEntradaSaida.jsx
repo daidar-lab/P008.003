@@ -1,28 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus, Pencil, Trash2, Search, RefreshCw } from 'lucide-react'
-import { apiGet } from '../api.js'
+import { apiGet, apiSend } from '../api.js'
 import TipoForm from './TipoForm.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 
 const ENDPOINT = '/tipos-entrada-saida'
-const BASE = import.meta.env.VITE_API_BASE || '/api'
-
-async function apiSend(method, path, body) {
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined
-  })
-  if (res.status === 204) return null
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    const err = new Error(data.message || data.error || `HTTP ${res.status}`)
-    err.status = res.status
-    err.fields = data.fields
-    throw err
-  }
-  return data
-}
 
 export default function TiposEntradaSaida() {
   const [items, setItems] = useState([])

@@ -2,12 +2,35 @@ import { useEffect, useState } from 'react'
 
 const BASE = import.meta.env.VITE_API_BASE || '/api'
 
+async function parseError(res, path) {
+  const body = await res.text().catch(() => '')
+  let msg = body
+  let payload = null
+  try { payload = JSON.parse(body) } catch {}
+  if (payload) {
+    msg = payload.message || payload.error || body
+  }
+  const err = new Error(msg || `HTTP ${res.status}`)
+  err.status = res.status
+  err.path = path
+  if (payload?.fields) err.fields = payload.fields
+  return err
+}
+
 export async function apiGet(path, { signal } = {}) {
   const res = await fetch(`${BASE}${path}`, { signal })
-  if (!res.ok) {
-    const body = await res.text().catch(() => '')
-    throw new Error(`API ${res.status} on ${path}: ${body}`)
-  }
+  if (!res.ok) throw await parseError(res, path)
+  return res.json()
+}
+
+export async function apiSend(method, path, body) {
+  const res = await fetch(`${BASE}${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body != null ? JSON.stringify(body) : undefined
+  })
+  if (res.status === 204) return null
+  if (!res.ok) throw await parseError(res, path)
   return res.json()
 }
 

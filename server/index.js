@@ -3,6 +3,7 @@ import cors from 'cors'
 import 'dotenv/config'
 
 import { pool } from './db.js'
+import { ensureSchema } from './bootstrap.js'
 import stats from './routes/stats.js'
 import totalBalance from './routes/totalBalance.js'
 import performance from './routes/performance.js'
@@ -43,15 +44,27 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'internal_error', message: err.message })
 })
 
-const server = app.listen(PORT, () => {
-  console.log(`▲ Vento API on http://localhost:${PORT}`)
-})
+async function start() {
+  try {
+    await ensureSchema()
+  } catch (err) {
+    console.error('✗ could not ensure schema:', err.message)
+    console.error('  API will still start; DB-backed routes will return 500')
+    console.error('  Fix the DB connection/permissions and restart.')
+  }
 
-async function shutdown(signal) {
-  console.log(`\n${signal} received — shutting down`)
-  server.close(() => { /* stop accepting */ })
-  try { await pool.end() } catch {}
-  process.exit(0)
+  const server = app.listen(PORT, () => {
+    console.log(`▲ Vento API on http://localhost:${PORT}`)
+  })
+
+  async function shutdown(signal) {
+    console.log(`\n${signal} received — shutting down`)
+    server.close(() => { /* stop accepting */ })
+    try { await pool.end() } catch {}
+    process.exit(0)
+  }
+  process.on('SIGINT', () => shutdown('SIGINT'))
+  process.on('SIGTERM', () => shutdown('SIGTERM'))
 }
-process.on('SIGINT', () => shutdown('SIGINT'))
-process.on('SIGTERM', () => shutdown('SIGTERM'))
+
+start()
