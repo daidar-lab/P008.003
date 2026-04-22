@@ -1,4 +1,4 @@
-# Vento API
+# Audit Supply API
 
 Camada HTTP em Node.js (Express) que expõe os dados do dashboard a partir
 de um banco **PostgreSQL**, usando o cliente `pg` via pool de conexões.
@@ -59,7 +59,7 @@ Saída esperada no boot:
 
 ```
 ✓ schema ensured
-▲ Vento API on http://localhost:3001
+▲ Audit Supply API on http://localhost:3001
 ```
 
 ## Endpoints

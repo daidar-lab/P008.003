@@ -24,8 +24,21 @@ export default function Sidebar({ route, onNavigate }) {
   return (
     <aside className="sidebar">
       <div className="logo">
-        <span className="logo-mark">V</span>
-        <span>Vento®</span>
+        <span className="logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="18" height="18" fill="none">
+            <path
+              d="M17 33.5 L28 44 L47 21"
+              stroke="#ffffff"
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <span className="logo-word">
+          <span className="logo-word-1">Audit</span>
+          <span className="logo-word-2">Supply</span>
+        </span>
       </div>
 
       <nav className="nav">
@@ -75,7 +88,7 @@ export default function Sidebar({ route, onNavigate }) {
         <div className="profile-avatar">F</div>
         <div className="profile-info">
           <span className="name">Felix</span>
-          <span className="mail">felix@vento.demo</span>
+          <span className="mail">felix@auditsupply.demo</span>
         </div>
         <button className="profile-more" aria-label="More">
           <MoreVertical size={16} />

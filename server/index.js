@@ -60,7 +60,7 @@ async function start() {
   }
 
   const server = app.listen(PORT, () => {
-    console.log(`▲ Vento API on http://localhost:${PORT}`)
+    console.log(`▲ Audit Supply API on http://localhost:${PORT}`)
   })
 
   async function shutdown(signal) {

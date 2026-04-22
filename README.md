@@ -1,7 +1,11 @@
-# Vento® Dashboard
+# Audit Supply
 
-Visualização em React inspirada na referência do dashboard "Vento®" (Overview),
-com **API Node/Express + PostgreSQL** fornecendo os dados.
+Plataforma para **auditoria de entradas de compras**: compara a nota fiscal
+recebida do fornecedor com o pedido de compras negociado e evidencia
+divergências — em valor, percentual e item — para que o time de compras
+atue antes do pagamento.
+
+Stack: React 18 + Vite no frontend, Node.js/Express + PostgreSQL no backend.
 
 ## Stack
 

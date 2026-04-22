@@ -26,7 +26,7 @@ export default function VentoAI() {
     <div className="card ai-card">
       <div className="ai-header">
         <span className="ai-badge">
-          <Sparkles size={12} /> Vento AI
+          <Sparkles size={12} /> Audit AI
         </span>
         <span className="ai-pin">
           <Pin size={11} /> Pin

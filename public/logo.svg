@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="as-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"  stop-color="#2f6bff"/>
+      <stop offset="70%" stop-color="#1f8be0"/>
+      <stop offset="100%" stop-color="#19b26b"/>
+    </linearGradient>
+    <linearGradient id="as-sheen" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0"   stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Ladrilho arredondado com gradiente azul→verde (azul = confiança/auditoria; verde = OK/conferido) -->
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#as-bg)"/>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#as-sheen)"/>
+
+  <!-- Check elegante centralizado: arco largo, traços arredondados -->
+  <path d="M17 33.5 L28 44 L47 21"
+        stroke="#ffffff"
+        stroke-width="5.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"/>
+
+  <!-- Reforço sutil do contorno (borda escura muito leve para legibilidade em fundos claros) -->
+  <rect x="2" y="2" width="60" height="60" rx="15"
+        fill="none"
+        stroke="#0f1115"
+        stroke-opacity="0.06"
+        stroke-width="1"/>
+</svg>
