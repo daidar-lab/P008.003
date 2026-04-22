@@ -1,5 +1,8 @@
-import { useMemo, useState } from 'react'
-import { ChevronUp, ChevronDown, ChevronsUpDown, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  ChevronUp, ChevronDown, ChevronsUpDown, X,
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
+} from 'lucide-react'
 
 /**
  * Tabela com ordenação e filtros por coluna.
@@ -21,16 +24,22 @@ import { ChevronUp, ChevronDown, ChevronsUpDown, X } from 'lucide-react'
  *   sticky?: 'right',
  * }>
  */
+const DEFAULT_PAGE_SIZES = [25, 50, 100, 200, 500]
+
 export default function DataTable({
   columns,
   rows,
   loading = false,
   emptyMessage = 'Nenhum registro encontrado.',
   defaultSort = null,
-  wide = false
+  wide = false,
+  defaultPageSize = 25,
+  pageSizeOptions = DEFAULT_PAGE_SIZES
 }) {
   const [sort, setSort] = useState(defaultSort)
   const [filters, setFilters] = useState({})
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(defaultPageSize)
 
   const activeFilters = Object.entries(filters).filter(([, v]) => v && String(v).trim() !== '' && v !== '__all__')
 
@@ -76,6 +85,18 @@ export default function DataTable({
     })
   }, [filtered, columns, sort])
 
+  const total = sorted.length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const start = (currentPage - 1) * pageSize
+  const end = Math.min(start + pageSize, total)
+  const paginated = useMemo(() => sorted.slice(start, end), [sorted, start, end])
+
+  useEffect(() => {
+    // Quando filtro/ordenação mudam o total, volta para a página 1.
+    setPage(1)
+  }, [activeFilters.length, sort?.key, sort?.dir, pageSize])
+
   function toggleSort(key) {
     setSort((prev) => {
       if (!prev || prev.key !== key) return { key, dir: 'asc' }
@@ -93,6 +114,8 @@ export default function DataTable({
   }
 
   const hasFilters = activeFilters.length > 0
+
+  const pageNumbers = buildPageNumbers(currentPage, totalPages)
 
   return (
     <div className={`dt-wrap ${wide ? 'table-wrap' : ''}`}>
@@ -177,7 +200,7 @@ export default function DataTable({
           </tr>
         </thead>
         <tbody>
-          {!loading && sorted.length === 0 && (
+          {!loading && total === 0 && (
             <tr>
               <td colSpan={columns.length}>
                 <div className="empty-state">
@@ -186,7 +209,7 @@ export default function DataTable({
               </td>
             </tr>
           )}
-          {sorted.map((row, i) => (
+          {paginated.map((row, i) => (
             <tr key={row.id ?? i}>
               {columns.map((col) => {
                 const raw = col.accessor ? col.accessor(row) : row[col.key]
@@ -212,10 +235,74 @@ export default function DataTable({
           ))}
         </tbody>
       </table>
+
+      <div className="dt-pagination">
+        <div className="dt-range">
+          {total === 0
+            ? 'Nenhum registro'
+            : <>Mostrando <strong>{fmt(start + 1)}</strong>–<strong>{fmt(end)}</strong> de <strong>{fmt(total)}</strong> registros</>
+          }
+        </div>
+
+        <div className="dt-pagesize">
+          <label htmlFor="dt-psize">Por página:</label>
+          <select
+            id="dt-psize"
+            className="col-filter-select"
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+          >
+            {pageSizeOptions.map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="dt-pager">
+          <button type="button" className="dt-pg-btn" title="Primeira"
+                  onClick={() => setPage(1)} disabled={currentPage <= 1}>
+            <ChevronsLeft size={14} />
+          </button>
+          <button type="button" className="dt-pg-btn" title="Anterior"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage <= 1}>
+            <ChevronLeft size={14} />
+          </button>
+          {pageNumbers.map((p, i) =>
+            p === '…'
+              ? <span key={`e${i}`} className="dt-pg-ellipsis">…</span>
+              : <button
+                  key={p}
+                  type="button"
+                  className={`dt-pg-btn ${p === currentPage ? 'active' : ''}`}
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </button>
+          )}
+          <button type="button" className="dt-pg-btn" title="Próxima"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages}>
+            <ChevronRight size={14} />
+          </button>
+          <button type="button" className="dt-pg-btn" title="Última"
+                  onClick={() => setPage(totalPages)} disabled={currentPage >= totalPages}>
+            <ChevronsRight size={14} />
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
 
-export function DataTableCount({ rows, children }) {
-  return children(rows.length)
+const fmt = (n) => new Intl.NumberFormat('pt-BR').format(n)
+
+function buildPageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages = [1]
+  if (current > 4) pages.push('…')
+  const from = Math.max(2, current - 1)
+  const to   = Math.min(total - 1, current + 1)
+  for (let p = from; p <= to; p++) pages.push(p)
+  if (current < total - 3) pages.push('…')
+  pages.push(total)
+  return pages
 }

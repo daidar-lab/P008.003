@@ -839,3 +839,54 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 /* Sticky right também precisa cobrir a filter-row */
 .wide-table tr.filter-row .sticky-right,
 .wide-table tr.filter-row .col-actions { background: var(--panel); }
+
+/* ---------- DataTable: pagination ---------- */
+.dt-pagination {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 6px 2px;
+  font-size: 12px;
+  color: var(--text-2);
+  flex-wrap: wrap;
+}
+.dt-range { flex: 1 1 auto; }
+.dt-range strong { color: var(--text); font-weight: 600; }
+
+.dt-pagesize {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.dt-pagesize label { color: var(--text-3); }
+.dt-pagesize select {
+  width: auto;
+  padding: 4px 22px 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-2);
+  font-size: 12px;
+}
+
+.dt-pager {
+  display: inline-flex; align-items: center; gap: 2px;
+}
+.dt-pg-btn {
+  min-width: 30px; height: 30px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 12px; font-weight: 600;
+  color: var(--text-2);
+  background: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+.dt-pg-btn:hover:not(:disabled) { background: var(--panel-2); color: var(--text); }
+.dt-pg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.dt-pg-btn.active {
+  background: #101214; color: white; cursor: default;
+}
+.dt-pg-ellipsis {
+  display: inline-block; min-width: 24px;
+  text-align: center;
+  color: var(--text-3);
+  user-select: none;
+}

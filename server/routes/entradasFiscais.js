@@ -220,8 +220,7 @@ router.get('/', async (req, res, next) => {
       `SELECT id, ${DB_COLS}, created_at, updated_at
        FROM entradas_fiscais
        ${where}
-       ORDER BY id DESC
-       LIMIT 500`,
+       ORDER BY id DESC`,
       params
     )
     res.json(rows.map(mapRowDbToApi))
