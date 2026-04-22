@@ -18,20 +18,23 @@ const formatValue = (n) => new Intl.NumberFormat('pt-BR').format(n)
 export default function Overview2() {
   const { data: stats } = useApi('/stats', { fallback: STAT_FALLBACK })
   const { data: nfMetric } = useApi('/entradas-fiscais/metrics/nf-menor-que-negociado', {
-    fallback: { count: 0, total: 0, percent: 0, valorizacao: 0 }
+    fallback: { count: 0, total: 0, percent: 0, valorizacao: 0, valorTotal: 0, percentValorizacao: 0 }
   })
 
   // Usa os stats da API, mas ignora 'total_views' — o primeiro card passa a
   // mostrar a contagem de itens com valor NF < valor negociado de compras.
   const otherStats = (stats || []).filter((s) => s.key !== 'total_views').slice(0, 2)
 
-  const nfPercent     = Number(nfMetric?.percent ?? 0)
-  const nfTotal       = Number(nfMetric?.total ?? 0)
-  const nfCount       = Number(nfMetric?.count ?? 0)
-  const nfValorizacao = Number(nfMetric?.valorizacao ?? 0)
-  const nfPercentLabel = new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: 1, maximumFractionDigits: 1
-  }).format(nfPercent)
+  const nfPercent            = Number(nfMetric?.percent ?? 0)
+  const nfTotal              = Number(nfMetric?.total ?? 0)
+  const nfCount              = Number(nfMetric?.count ?? 0)
+  const nfValorizacao        = Number(nfMetric?.valorizacao ?? 0)
+  const nfPercentValorizacao = Number(nfMetric?.percentValorizacao ?? 0)
+  const fmtPercent = (n) => new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 1, maximumFractionDigits: 2
+  }).format(n)
+  const nfPercentLabel            = fmtPercent(nfPercent)
+  const nfPercentValorizacaoLabel = fmtPercent(nfPercentValorizacao)
   const nfValorizacaoLabel = new Intl.NumberFormat('pt-BR', {
     style: 'currency', currency: 'BRL'
   }).format(nfValorizacao)
@@ -51,6 +54,7 @@ export default function Overview2() {
             <>
               <span className="label">Valorização</span>
               {nfValorizacaoLabel}
+              <span className="stat-extra-pct"> · {nfPercentValorizacaoLabel}% do total</span>
             </>
           }
         />

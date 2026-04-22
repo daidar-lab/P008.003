@@ -378,16 +378,30 @@ router.get('/metrics/nf-menor-que-negociado', async (_req, res, next) => {
                AND valor_nota_fiscal < valor_negociado_compras
            ),
            0
-         )::numeric AS valorizacao
+         )::numeric AS valorizacao,
+         COALESCE(
+           SUM(quantidade_escriturada * valor_negociado_compras)
+           FILTER (
+             WHERE quantidade_escriturada IS NOT NULL
+               AND valor_negociado_compras IS NOT NULL
+           ),
+           0
+         )::numeric AS valor_total
        FROM entradas_fiscais`
     )
-    const { count, total } = rows[0]
+    const count = rows[0].count
+    const total = rows[0].total
+    const valorizacao = Number(rows[0].valorizacao)
+    const valorTotal  = Number(rows[0].valor_total)
     const percent = total > 0 ? (count / total) * 100 : 0
+    const percentValorizacao = valorTotal > 0 ? (valorizacao / valorTotal) * 100 : 0
     res.json({
       count,
       total,
       percent,
-      valorizacao: Number(rows[0].valorizacao)
+      valorizacao,
+      valorTotal,
+      percentValorizacao
     })
   } catch (err) { next(err) }
 })
