@@ -1,6 +1,7 @@
-import { ArrowUpRight } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowUpRight, Maximize2, X as XIcon } from 'lucide-react'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList,
   ResponsiveContainer, Tooltip
 } from 'recharts'
 import { useApi } from '../api.js'
@@ -51,7 +52,60 @@ function VarTooltip({ active, payload, label }) {
   )
 }
 
+const labelFmt = (v) => (v && v > 0) ? fmtBRLCompact(v) : ''
+
+function VariationChart({ series, showLabels = false, yAxisWidth = 60 }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart
+        data={series}
+        barCategoryGap={showLabels ? 12 : 4}
+        margin={{ top: showLabels ? 24 : 10, right: 8, bottom: 0, left: -8 }}
+      >
+        <CartesianGrid stroke="#eef0f3" strokeDasharray="3 4" vertical={false} />
+        <XAxis
+          dataKey="date"
+          tickFormatter={fmtDayShort}
+          axisLine={false}
+          tickLine={false}
+          tick={{ fontSize: showLabels ? 12 : 10, fill: '#9aa1ac' }}
+          interval="preserveStartEnd"
+          minTickGap={showLabels ? 8 : 14}
+        />
+        <YAxis
+          axisLine={false}
+          tickLine={false}
+          tick={{ fontSize: showLabels ? 12 : 10, fill: '#9aa1ac' }}
+          tickFormatter={fmtBRLCompact}
+          width={yAxisWidth}
+        />
+        <Tooltip content={<VarTooltip />} cursor={{ fill: 'rgba(47, 107, 255, 0.06)' }} />
+        <Bar dataKey="savings" fill={GREEN} radius={[3, 3, 0, 0]}>
+          {showLabels && (
+            <LabelList
+              dataKey="savings" position="top"
+              formatter={labelFmt}
+              style={{ fontSize: 11, fontWeight: 600, fill: '#137a42' }}
+            />
+          )}
+        </Bar>
+        <Bar dataKey="overspend" fill={RED} radius={[3, 3, 0, 0]}>
+          {showLabels && (
+            <LabelList
+              dataKey="overspend" position="top"
+              formatter={labelFmt}
+              style={{ fontSize: 11, fontWeight: 600, fill: '#b6242a' }}
+            />
+          )}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
 export default function TotalBalance({ range }) {
+  const [expanded, setExpanded] = useState(false)
+
   const qs = range?.from && range?.to && range.from <= range.to
     ? `?from=${range.from}&to=${range.to}`
     : ''
@@ -66,59 +120,104 @@ export default function TotalBalance({ range }) {
     ? `${fmtDayShort(range.from)} — ${fmtDayShort(range.to)}`
     : 'Todos os períodos'
 
+  useEffect(() => {
+    if (!expanded) return
+    const onKey = (e) => { if (e.key === 'Escape') setExpanded(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [expanded])
+
   return (
-    <div className="card">
-      <div className="card-head">
-        <span className="card-title">Total Balance</span>
-        <button className="card-arrow" aria-label="Open">
-          <ArrowUpRight size={14} />
-        </button>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{
-          fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em',
-          color: netPositive ? GREEN : RED
-        }}>
-          {fmtBRLCompact(totals.net)}
+    <>
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Total Balance</span>
+          <button
+            className="card-arrow"
+            aria-label="Expandir gráfico"
+            title="Expandir gráfico"
+            onClick={() => setExpanded(true)}
+          >
+            <ArrowUpRight size={14} />
+          </button>
         </div>
-        <span className="balance-sub">{rangeLabel}</span>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em',
+            color: netPositive ? GREEN : RED
+          }}>
+            {fmtBRLCompact(totals.net)}
+          </div>
+          <span className="balance-sub">{rangeLabel}</span>
+        </div>
+
+        <div style={{ height: 180, marginTop: 10 }}>
+          <VariationChart series={series} />
+        </div>
+
+        <div className="legend">
+          <span className="legend-item"><span className="dot" style={{ background: GREEN }} />NF &lt; Negociado</span>
+          <span className="legend-item"><span className="dot" style={{ background: RED }} />NF &gt; Negociado</span>
+          <span className="legend-item" style={{ marginLeft: 'auto', color: 'var(--text-3)' }}>
+            {totals.days} dia{totals.days === 1 ? '' : 's'}
+          </span>
+        </div>
       </div>
 
-      <div style={{ height: 180, marginTop: 10 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={series} barCategoryGap={4} margin={{ top: 10, right: 4, bottom: 0, left: -8 }}>
-            <CartesianGrid stroke="#eef0f3" strokeDasharray="3 4" vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickFormatter={fmtDayShort}
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10, fill: '#9aa1ac' }}
-              interval="preserveStartEnd"
-              minTickGap={14}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10, fill: '#9aa1ac' }}
-              tickFormatter={fmtBRLCompact}
-              width={60}
-            />
-            <Tooltip content={<VarTooltip />} cursor={{ fill: 'rgba(47, 107, 255, 0.06)' }} />
-            <Bar dataKey="savings"   fill={GREEN} radius={[3, 3, 0, 0]} />
-            <Bar dataKey="overspend" fill={RED}   radius={[3, 3, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {expanded && (
+        <div
+          className="modal-backdrop chart-modal"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setExpanded(false) }}
+        >
+          <div className="modal modal-chart" role="dialog" aria-modal="true">
+            <div className="modal-head chart-modal-head">
+              <div>
+                <h2>Total Balance · Variação diária</h2>
+                <p>
+                  NF &lt; Negociado vs. NF &gt; Negociado · {rangeLabel} ·
+                  {' '}{totals.days} dia{totals.days === 1 ? '' : 's'}
+                </p>
+              </div>
+              <div className="chart-modal-actions">
+                <div className="chart-modal-net">
+                  <span>Líquido</span>
+                  <strong style={{ color: netPositive ? GREEN : RED }}>
+                    {fmtBRL(totals.net)}
+                  </strong>
+                </div>
+                <button
+                  className="card-arrow"
+                  aria-label="Fechar"
+                  title="Fechar (Esc)"
+                  onClick={() => setExpanded(false)}
+                >
+                  <XIcon size={16} />
+                </button>
+              </div>
+            </div>
 
-      <div className="legend">
-        <span className="legend-item"><span className="dot" style={{ background: GREEN }} />NF &lt; Negociado</span>
-        <span className="legend-item"><span className="dot" style={{ background: RED }} />NF &gt; Negociado</span>
-        <span className="legend-item" style={{ marginLeft: 'auto', color: 'var(--text-3)' }}>
-          {totals.days} dia{totals.days === 1 ? '' : 's'}
-        </span>
-      </div>
-    </div>
+            <div className="modal-body chart-modal-body">
+              <VariationChart series={series} showLabels yAxisWidth={80} />
+            </div>
+
+            <div className="modal-foot chart-modal-foot">
+              <div className="legend" style={{ margin: 0 }}>
+                <span className="legend-item"><span className="dot" style={{ background: GREEN }} />NF &lt; Negociado</span>
+                <span className="legend-item"><span className="dot" style={{ background: RED }} />NF &gt; Negociado</span>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setExpanded(false)}
+              >
+                <Maximize2 size={14} style={{ transform: 'rotate(180deg)' }} />
+                <span>Reduzir</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

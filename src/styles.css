@@ -1017,3 +1017,56 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .grid.row-nf .nf-value-xl { font-size: 22px; }
 .grid.row-nf .nf-value-md { font-size: 16px; }
 .grid.row-nf .nf-grid { gap: 8px; }
+
+/* ---------- Chart fullscreen modal ---------- */
+.modal-backdrop.chart-modal { padding: 2vh 2vw; }
+
+.modal.modal-chart {
+  width: 96vw;
+  height: 96vh;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+}
+.chart-modal-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px 8px;
+}
+.chart-modal-head h2 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+.chart-modal-head p  { margin: 2px 0 0; font-size: 12px; color: var(--text-3); }
+
+.chart-modal-actions {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 12px;
+}
+.chart-modal-net {
+  display: inline-flex; flex-direction: column; align-items: flex-end;
+  line-height: 1.1;
+}
+.chart-modal-net span {
+  font-size: 10.5px; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;
+}
+.chart-modal-net strong {
+  font-size: 18px; font-weight: 700; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 12px 24px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-modal-foot {
+  padding: 12px 24px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+}
