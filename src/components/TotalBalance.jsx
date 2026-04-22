@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { ArrowUpRight, Maximize2, X as XIcon } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowUpRight, Maximize2, X as XIcon, ArrowLeft } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList,
   ResponsiveContainer, Tooltip
@@ -42,6 +42,16 @@ const fmtMonthLong = (iso) => {
   return `${MONTH_FULL[+m[2] - 1]} de ${m[1]}`
 }
 
+function monthBounds(iso) {
+  const m = /^(\d{4})-(\d{2})-\d{2}/.exec(iso || '')
+  if (!m) return null
+  const year = +m[1], month = +m[2]
+  const first = `${year}-${String(month).padStart(2, '0')}-01`
+  const lastDay = new Date(year, month, 0).getDate()
+  const last = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  return { from: first, to: last, label: fmtMonthLong(first) }
+}
+
 function makeVarTooltip(longFmt) {
   return function VarTooltip({ active, payload, label }) {
     if (!active || !payload?.length) return null
@@ -69,10 +79,22 @@ function makeVarTooltip(longFmt) {
 
 const labelFmt = (v) => (v && v > 0) ? fmtBRLCompact(v) : ''
 
-function VariationChart({ series, showLabels = false, yAxisWidth = 60, granularity = 'day' }) {
+function VariationChart({
+  series,
+  showLabels = false,
+  yAxisWidth = 60,
+  granularity = 'day',
+  onBarClick
+}) {
   const shortFmt = granularity === 'month' ? fmtMonthShort : fmtDayShort
   const longFmt  = granularity === 'month' ? fmtMonthLong  : fmtDayLong
   const Tip = makeVarTooltip(longFmt)
+  const clickable = typeof onBarClick === 'function' && granularity === 'month'
+  const handleClick = clickable
+    ? (payload) => { if (payload?.date) onBarClick(payload) }
+    : undefined
+  const barStyle = clickable ? { cursor: 'pointer' } : undefined
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
@@ -98,7 +120,7 @@ function VariationChart({ series, showLabels = false, yAxisWidth = 60, granulari
           width={yAxisWidth}
         />
         <Tooltip content={<Tip />} cursor={{ fill: 'rgba(47, 107, 255, 0.06)' }} />
-        <Bar dataKey="savings" fill={GREEN} radius={[3, 3, 0, 0]}>
+        <Bar dataKey="savings" fill={GREEN} radius={[3, 3, 0, 0]} onClick={handleClick} style={barStyle}>
           {showLabels && (
             <LabelList
               dataKey="savings" position="top"
@@ -107,7 +129,7 @@ function VariationChart({ series, showLabels = false, yAxisWidth = 60, granulari
             />
           )}
         </Bar>
-        <Bar dataKey="overspend" fill={RED} radius={[3, 3, 0, 0]}>
+        <Bar dataKey="overspend" fill={RED} radius={[3, 3, 0, 0]} onClick={handleClick} style={barStyle}>
           {showLabels && (
             <LabelList
               dataKey="overspend" position="top"
@@ -123,9 +145,16 @@ function VariationChart({ series, showLabels = false, yAxisWidth = 60, granulari
 
 export default function TotalBalance({ range }) {
   const [expanded, setExpanded] = useState(false)
+  // drill-down: quando o usuário clica numa coluna mensal, fixa o
+  // intervalo naquele mês e o endpoint volta a agrupar por dia.
+  const [drillDown, setDrillDown] = useState(null)
 
-  const qs = range?.from && range?.to && range.from <= range.to
-    ? `?from=${range.from}&to=${range.to}`
+  // Quando o intervalo externo muda, descarta drill-down antigo.
+  useEffect(() => { setDrillDown(null) }, [range?.from, range?.to])
+
+  const effectiveRange = drillDown || range
+  const qs = effectiveRange?.from && effectiveRange?.to && effectiveRange.from <= effectiveRange.to
+    ? `?from=${effectiveRange.from}&to=${effectiveRange.to}`
     : ''
   const { data } = useApi(`/entradas-fiscais/metrics/variacao-diaria${qs}`, {
     fallback: { series: [], totals: { savings: 0, overspend: 0, net: 0, buckets: 0 }, granularity: 'day' }
@@ -138,9 +167,19 @@ export default function TotalBalance({ range }) {
   const unitLabelPlural = granularity === 'month' ? 'meses' : 'dias'
   const bucketsCount = totals.buckets ?? totals.days ?? series.length
   const netPositive = totals.net >= 0
-  const rangeLabel = range?.from && range?.to
-    ? `${fmtDayShort(range.from)} — ${fmtDayShort(range.to)}`
+  const rangeLabel = effectiveRange?.from && effectiveRange?.to
+    ? `${fmtDayShort(effectiveRange.from)} — ${fmtDayShort(effectiveRange.to)}`
     : 'Todos os períodos'
+
+  const handleBarClick = useMemo(
+    () => (granularity === 'month'
+      ? (payload) => {
+          const m = monthBounds(payload?.date)
+          if (m) setDrillDown({ from: m.from, to: m.to, label: m.label })
+        }
+      : null),
+    [granularity]
+  )
 
   useEffect(() => {
     if (!expanded) return
@@ -174,8 +213,24 @@ export default function TotalBalance({ range }) {
           <span className="balance-sub">{rangeLabel}</span>
         </div>
 
+        {drillDown && (
+          <button
+            type="button"
+            className="drill-back-pill"
+            onClick={() => setDrillDown(null)}
+            title="Voltar à visão mensal"
+          >
+            <ArrowLeft size={12} />
+            <span>Detalhe de <strong>{drillDown.label}</strong> · voltar</span>
+          </button>
+        )}
+
         <div style={{ height: 180, marginTop: 10 }}>
-          <VariationChart series={series} granularity={granularity} />
+          <VariationChart
+            series={series}
+            granularity={granularity}
+            onBarClick={handleBarClick}
+          />
         </div>
 
         <div className="legend">
@@ -183,7 +238,7 @@ export default function TotalBalance({ range }) {
           <span className="legend-item"><span className="dot" style={{ background: RED }} />NF &gt; Negociado</span>
           <span className="legend-item" style={{ marginLeft: 'auto', color: 'var(--text-3)' }}>
             {bucketsCount} {bucketsCount === 1 ? unitLabel : unitLabelPlural}
-            {granularity === 'month' && <span style={{ marginLeft: 4, opacity: 0.7 }}>(mensal)</span>}
+            {granularity === 'month' && <span style={{ marginLeft: 4, opacity: 0.7 }}>(mensal · clique para detalhar)</span>}
           </span>
         </div>
       </div>
@@ -200,7 +255,20 @@ export default function TotalBalance({ range }) {
                 <p>
                   NF &lt; Negociado vs. NF &gt; Negociado · {rangeLabel} ·
                   {' '}{bucketsCount} {bucketsCount === 1 ? unitLabel : unitLabelPlural}
+                  {granularity === 'month' && ' · clique em uma coluna para ver o detalhe diário'}
                 </p>
+                {drillDown && (
+                  <button
+                    type="button"
+                    className="drill-back-pill"
+                    onClick={() => setDrillDown(null)}
+                    title="Voltar à visão mensal"
+                    style={{ marginTop: 6 }}
+                  >
+                    <ArrowLeft size={12} />
+                    <span>Detalhe de <strong>{drillDown.label}</strong> · voltar</span>
+                  </button>
+                )}
               </div>
               <div className="chart-modal-actions">
                 <div className="chart-modal-net">
@@ -221,7 +289,13 @@ export default function TotalBalance({ range }) {
             </div>
 
             <div className="modal-body chart-modal-body">
-              <VariationChart series={series} showLabels yAxisWidth={80} granularity={granularity} />
+              <VariationChart
+                series={series}
+                showLabels
+                yAxisWidth={80}
+                granularity={granularity}
+                onBarClick={handleBarClick}
+              />
             </div>
 
             <div className="modal-foot chart-modal-foot">

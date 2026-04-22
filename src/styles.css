@@ -1070,3 +1070,19 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   gap: 12px;
   border-top: 1px solid var(--border);
 }
+
+/* Drill-down pill (visão mensal → detalhe diário do mês clicado) */
+.drill-back-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  margin-top: 8px;
+  background: #eef3ff;
+  color: var(--accent);
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.drill-back-pill:hover { background: #dde6ff; }
+.drill-back-pill strong { font-weight: 700; }
