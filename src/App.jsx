@@ -1,24 +1,22 @@
 import { useState } from 'react'
 import Sidebar from './components/Sidebar.jsx'
-import Overview from './pages/Overview.jsx'
-import Overview2 from './pages/Overview2.jsx'
+import Dashboard from './pages/Overview2.jsx'
 import TiposEntradaSaida from './pages/TiposEntradaSaida.jsx'
 import Produtos from './pages/Produtos.jsx'
 import EntradasFiscais from './pages/EntradasFiscais.jsx'
 import Filiais from './pages/Filiais.jsx'
 
 const ROUTES = {
+  'dashboard':           Dashboard,
+  'entradas-fiscais':    EntradasFiscais,
   'tipos-entrada-saida': TiposEntradaSaida,
-  'produtos': Produtos,
-  'filiais': Filiais,
-  'entradas-fiscais': EntradasFiscais,
-  'overview': Overview,
-  'overview-2': Overview2
+  'produtos':            Produtos,
+  'filiais':             Filiais
 }
 
 export default function App() {
-  const [route, setRoute] = useState('overview')
-  const Page = ROUTES[route] || Overview
+  const [route, setRoute] = useState('dashboard')
+  const Page = ROUTES[route] || Dashboard
 
   return (
     <div className="app">
