@@ -32,7 +32,9 @@ export default function NfVariationCard({
   valorizacaoLabel = 'Valorização',
   trend = 'down',
   maxPercent,
-  minPercent
+  minPercent,
+  onClick,
+  selected = false
 }) {
   const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown
   const validRange = range?.from && range?.to && range.from <= range.to
@@ -60,14 +62,29 @@ export default function NfVariationCard({
   const percentItens       = Number(nf?.percent ?? 0)
   const rangeLabel = fmtRangeLabel(range)
 
+  const clickable = typeof onClick === 'function'
   return (
-    <div className="card nf-card">
+    <div
+      className={`card nf-card ${clickable ? 'nf-card-clickable' : ''} ${selected ? 'nf-card-selected' : ''}`}
+      style={selected ? { borderColor: dotColor, boxShadow: `0 0 0 2px ${dotColor}33` } : undefined}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      aria-pressed={clickable ? selected : undefined}
+      onClick={clickable ? onClick : undefined}
+      onKeyDown={clickable
+        ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }
+        : undefined}
+    >
       <div className="card-head">
         <span className="card-title">
           <span className="dot" style={{ background: dotColor }} />
           {title}
         </span>
-        <button className="card-arrow" aria-label="Open">
+        <button
+          className="card-arrow"
+          aria-label="Open"
+          onClick={(e) => { e.stopPropagation() }}
+        >
           <ArrowUpRight size={14} />
         </button>
       </div>

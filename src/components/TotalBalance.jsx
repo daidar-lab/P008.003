@@ -143,7 +143,7 @@ function VariationChart({
   )
 }
 
-export default function TotalBalance({ range }) {
+export default function TotalBalance({ range, filter }) {
   const [expanded, setExpanded] = useState(false)
   // drill-down: quando o usuário clica numa coluna mensal, fixa o
   // intervalo naquele mês e o endpoint volta a agrupar por dia.
@@ -151,11 +151,25 @@ export default function TotalBalance({ range }) {
 
   // Quando o intervalo externo muda, descarta drill-down antigo.
   useEffect(() => { setDrillDown(null) }, [range?.from, range?.to])
+  // Idem quando a categoria selecionada muda.
+  useEffect(() => { setDrillDown(null) }, [filter?.op, filter?.maxPercent, filter?.minPercent])
 
   const effectiveRange = drillDown || range
-  const qs = effectiveRange?.from && effectiveRange?.to && effectiveRange.from <= effectiveRange.to
-    ? `?from=${effectiveRange.from}&to=${effectiveRange.to}`
-    : ''
+  const qsParts = []
+  if (effectiveRange?.from && effectiveRange?.to && effectiveRange.from <= effectiveRange.to) {
+    qsParts.push(`from=${encodeURIComponent(effectiveRange.from)}`)
+    qsParts.push(`to=${encodeURIComponent(effectiveRange.to)}`)
+  }
+  if (filter?.op === 'lt' || filter?.op === 'gt') {
+    qsParts.push(`op=${filter.op}`)
+    if (typeof filter.maxPercent === 'number' && filter.maxPercent > 0) {
+      qsParts.push(`maxPercent=${filter.maxPercent}`)
+    }
+    if (typeof filter.minPercent === 'number' && filter.minPercent > 0) {
+      qsParts.push(`minPercent=${filter.minPercent}`)
+    }
+  }
+  const qs = qsParts.length ? `?${qsParts.join('&')}` : ''
   const { data } = useApi(`/entradas-fiscais/metrics/variacao-diaria${qs}`, {
     fallback: { series: [], totals: { savings: 0, overspend: 0, net: 0, buckets: 0 }, granularity: 'day' }
   })
@@ -203,7 +217,7 @@ export default function TotalBalance({ range }) {
           </button>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <div style={{
             fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em',
             color: netPositive ? GREEN : RED
@@ -211,6 +225,19 @@ export default function TotalBalance({ range }) {
             {fmtBRLCompact(totals.net)}
           </div>
           <span className="balance-sub">{rangeLabel}</span>
+          {filter?.label && (
+            <span
+              className="category-pill"
+              title="Clique no mesmo card novamente para limpar"
+              style={{
+                background: `${filter.color}1A`,
+                color: filter.color,
+                borderColor: `${filter.color}55`
+              }}
+            >
+              {filter.label}
+            </span>
+          )}
         </div>
 
         {drillDown && (

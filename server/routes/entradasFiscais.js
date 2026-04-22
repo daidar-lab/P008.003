@@ -489,9 +489,14 @@ router.get('/metrics/nf-maior-que-negociado', async (req, res, next) => {
 // METRICS: série de variação — savings (NF<Neg) e overspend (NF>Neg)
 // Granularidade automática: se o intervalo for maior que 45 dias, agrupa por
 // mês; caso contrário, agrupa por dia. Respeita considera_analise + from/to.
+// Filtro opcional por categoria (o mesmo dos cards superiores):
+//   ?op=lt|gt              → inclui somente linhas nf<neg ou nf>neg
+//   ?maxPercent=N          → teto (inclusivo) da diferença, em %
+//   ?minPercent=N          → piso (exclusivo) da diferença, em %
 router.get('/metrics/variacao-diaria', async (req, res, next) => {
   try {
-    const { from, to } = readRange(req)
+    const { from, to, maxPercent, minPercent } = readRange(req)
+    const op = req.query.op === 'lt' || req.query.op === 'gt' ? req.query.op : null
 
     // Decide granularidade pelo comprimento do intervalo
     let granularity = 'day'
@@ -515,6 +520,26 @@ router.get('/metrics/variacao-diaria', async (req, res, next) => {
     ]
     if (from) { params.push(from); where.push(`data_emissao_nota_fiscal >= $${params.length}`) }
     if (to)   { params.push(to);   where.push(`data_emissao_nota_fiscal <= $${params.length}`) }
+
+    // Filtro por categoria de card
+    if (op) {
+      const cmp = op === 'gt' ? '>' : '<'
+      where.push(`valor_nota_fiscal ${cmp} valor_negociado_compras`)
+      if (typeof maxPercent === 'number' && Number.isFinite(maxPercent) && maxPercent > 0) {
+        const factor = op === 'gt' ? 1 + maxPercent / 100 : 1 - maxPercent / 100
+        params.push(factor)
+        where.push(op === 'gt'
+          ? `valor_nota_fiscal <= valor_negociado_compras * $${params.length}`
+          : `valor_nota_fiscal >= valor_negociado_compras * $${params.length}`)
+      }
+      if (typeof minPercent === 'number' && Number.isFinite(minPercent) && minPercent > 0) {
+        const factor = op === 'gt' ? 1 + minPercent / 100 : 1 - minPercent / 100
+        params.push(factor)
+        where.push(op === 'gt'
+          ? `valor_nota_fiscal > valor_negociado_compras * $${params.length}`
+          : `valor_nota_fiscal < valor_negociado_compras * $${params.length}`)
+      }
+    }
 
     const { rows } = await query(
       `SELECT
@@ -546,6 +571,9 @@ router.get('/metrics/variacao-diaria', async (req, res, next) => {
     res.json({
       from: from ?? null, to: to ?? null,
       granularity,
+      op: op ?? null,
+      maxPercent: maxPercent ?? null,
+      minPercent: minPercent ?? null,
       series,
       totals: {
         savings:   series.reduce((s, d) => s + d.savings, 0),
