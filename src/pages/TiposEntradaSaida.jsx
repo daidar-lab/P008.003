@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Plus, Pencil, Trash2, Search, RefreshCw, Check, X, Upload } from 'lucide-react'
+import { Plus, Pencil, Trash2, RefreshCw, Check, X, Upload } from 'lucide-react'
 import { apiGet, apiSend } from '../api.js'
 import TipoForm from './TipoForm.jsx'
 import ImportTiposModal from './ImportTiposModal.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import DataTable from '../components/DataTable.jsx'
 
 const ENDPOINT = '/tipos-entrada-saida'
 
@@ -11,8 +12,7 @@ export default function TiposEntradaSaida() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [search, setSearch] = useState('')
-  const [editing, setEditing] = useState(null)  // null | {} (novo) | registro
+  const [editing, setEditing] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [importing, setImporting] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -31,15 +31,6 @@ export default function TiposEntradaSaida() {
   }, [])
 
   useEffect(() => { load() }, [load])
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return items
-    return items.filter(i =>
-      i.codigo.toLowerCase().includes(q) ||
-      i.descricao.toLowerCase().includes(q)
-    )
-  }, [items, search])
 
   async function handleSave(payload) {
     setSubmitting(true)
@@ -73,6 +64,34 @@ export default function TiposEntradaSaida() {
     }
   }
 
+  const columns = useMemo(() => ([
+    { key: 'id', label: 'ID', kind: 'number', className: 'col-id', minWidth: 60,
+      format: (v) => `#${v}` },
+    { key: 'codigo', label: 'Código', className: 'col-code', minWidth: 140 },
+    { key: 'descricao', label: 'Descrição' },
+    {
+      key: 'consideraAnalise', label: 'Análise', kind: 'boolean', className: 'col-flag', minWidth: 110,
+      filterKind: 'select',
+      filterOptions: [{ value: 'true', label: 'Sim' }, { value: 'false', label: 'Não' }],
+      format: (v) => v
+        ? <span className="pill pill-on" title="Considera na análise"><Check size={12} /> Sim</span>
+        : <span className="pill pill-off" title="Não considera na análise"><X size={12} /> Não</span>
+    },
+    {
+      key: '__actions', label: 'Ações', className: 'col-actions', sortable: false, filterable: false,
+      render: (row) => (
+        <>
+          <button className="row-action" aria-label="Editar" title="Editar" onClick={() => setEditing(row)}>
+            <Pencil size={15} />
+          </button>
+          <button className="row-action danger" aria-label="Excluir" title="Excluir" onClick={() => setDeleting(row)}>
+            <Trash2 size={15} />
+          </button>
+        </>
+      )
+    }
+  ]), [])
+
   return (
     <>
       <div className="page-header">
@@ -97,76 +116,20 @@ export default function TiposEntradaSaida() {
 
       <div className="card">
         <div className="toolbar">
-          <label className="search-input">
-            <Search size={14} />
-            <input
-              type="search"
-              placeholder="Buscar por código ou descrição"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </label>
           <span className="count">
-            {loading ? 'Carregando…' : `${filtered.length} registro${filtered.length === 1 ? '' : 's'}`}
+            {loading ? 'Carregando…' : `${items.length} registro${items.length === 1 ? '' : 's'}`}
           </span>
         </div>
 
         {error && <div className="banner">Falha ao carregar: {error}</div>}
 
-        <table className="crud-table">
-          <thead>
-            <tr>
-              <th className="col-id">ID</th>
-              <th className="col-code">Código</th>
-              <th>Descrição</th>
-              <th className="col-flag" title="Considerar na análise">Análise</th>
-              <th className="col-actions">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!loading && filtered.length === 0 && (
-              <tr>
-                <td colSpan={5}>
-                  <div className="empty-state">
-                    {search ? 'Nenhum registro encontrado para essa busca.'
-                           : 'Nenhum tipo cadastrado ainda. Clique em "Novo" para criar o primeiro.'}
-                  </div>
-                </td>
-              </tr>
-            )}
-
-            {filtered.map((it) => (
-              <tr key={it.id}>
-                <td className="col-id">#{it.id}</td>
-                <td className="col-code">{it.codigo}</td>
-                <td>{it.descricao}</td>
-                <td className="col-flag">
-                  {it.consideraAnalise
-                    ? <span className="pill pill-on" title="Considera na análise"><Check size={12} /> Sim</span>
-                    : <span className="pill pill-off" title="Não considera na análise"><X size={12} /> Não</span>}
-                </td>
-                <td className="col-actions">
-                  <button
-                    className="row-action"
-                    aria-label="Editar"
-                    title="Editar"
-                    onClick={() => setEditing(it)}
-                  >
-                    <Pencil size={15} />
-                  </button>
-                  <button
-                    className="row-action danger"
-                    aria-label="Excluir"
-                    title="Excluir"
-                    onClick={() => setDeleting(it)}
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable
+          columns={columns}
+          rows={items}
+          loading={loading}
+          emptyMessage='Nenhum tipo cadastrado ainda. Clique em "Novo" para criar o primeiro.'
+          defaultSort={{ key: 'id', dir: 'asc' }}
+        />
       </div>
 
       {editing && (

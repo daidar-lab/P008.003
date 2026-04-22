@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Plus, Pencil, Trash2, Search, RefreshCw, Upload } from 'lucide-react'
+import { Plus, Pencil, Trash2, RefreshCw, Upload } from 'lucide-react'
 import { apiGet, apiSend } from '../api.js'
 import ProdutoForm from './ProdutoForm.jsx'
 import ImportProdutosModal from './ImportProdutosModal.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import DataTable from '../components/DataTable.jsx'
 
 const ENDPOINT = '/produtos'
 
@@ -11,7 +12,6 @@ export default function Produtos() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [search, setSearch] = useState('')
   const [editing, setEditing] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [importing, setImporting] = useState(false)
@@ -32,23 +32,11 @@ export default function Produtos() {
 
   useEffect(() => { load() }, [load])
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return items
-    return items.filter(i =>
-      i.codigo.toLowerCase().includes(q) ||
-      i.descricao.toLowerCase().includes(q)
-    )
-  }, [items, search])
-
   async function handleSave(payload) {
     setSubmitting(true)
     try {
-      if (editing?.id) {
-        await apiSend('PUT', `${ENDPOINT}/${editing.id}`, payload)
-      } else {
-        await apiSend('POST', ENDPOINT, payload)
-      }
+      if (editing?.id) await apiSend('PUT', `${ENDPOINT}/${editing.id}`, payload)
+      else             await apiSend('POST', ENDPOINT, payload)
       setEditing(null)
       await load()
       return { ok: true }
@@ -72,6 +60,26 @@ export default function Produtos() {
       setSubmitting(false)
     }
   }
+
+  const columns = useMemo(() => ([
+    { key: 'id', label: 'ID', kind: 'number', className: 'col-id', minWidth: 60,
+      format: (v) => `#${v}` },
+    { key: 'codigo', label: 'Código', className: 'col-code', minWidth: 140 },
+    { key: 'descricao', label: 'Descrição' },
+    {
+      key: '__actions', label: 'Ações', className: 'col-actions', sortable: false, filterable: false,
+      render: (row) => (
+        <>
+          <button className="row-action" aria-label="Editar" title="Editar" onClick={() => setEditing(row)}>
+            <Pencil size={15} />
+          </button>
+          <button className="row-action danger" aria-label="Excluir" title="Excluir" onClick={() => setDeleting(row)}>
+            <Trash2 size={15} />
+          </button>
+        </>
+      )
+    }
+  ]), [])
 
   return (
     <>
@@ -97,70 +105,20 @@ export default function Produtos() {
 
       <div className="card">
         <div className="toolbar">
-          <label className="search-input">
-            <Search size={14} />
-            <input
-              type="search"
-              placeholder="Buscar por código ou descrição"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </label>
           <span className="count">
-            {loading ? 'Carregando…' : `${filtered.length} registro${filtered.length === 1 ? '' : 's'}`}
+            {loading ? 'Carregando…' : `${items.length} registro${items.length === 1 ? '' : 's'}`}
           </span>
         </div>
 
         {error && <div className="banner">Falha ao carregar: {error}</div>}
 
-        <table className="crud-table">
-          <thead>
-            <tr>
-              <th className="col-id">ID</th>
-              <th className="col-code">Código</th>
-              <th>Descrição</th>
-              <th className="col-actions">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!loading && filtered.length === 0 && (
-              <tr>
-                <td colSpan={4}>
-                  <div className="empty-state">
-                    {search ? 'Nenhum registro encontrado para essa busca.'
-                           : 'Nenhum produto cadastrado ainda. Clique em "Novo" para criar o primeiro.'}
-                  </div>
-                </td>
-              </tr>
-            )}
-
-            {filtered.map((it) => (
-              <tr key={it.id}>
-                <td className="col-id">#{it.id}</td>
-                <td className="col-code">{it.codigo}</td>
-                <td>{it.descricao}</td>
-                <td className="col-actions">
-                  <button
-                    className="row-action"
-                    aria-label="Editar"
-                    title="Editar"
-                    onClick={() => setEditing(it)}
-                  >
-                    <Pencil size={15} />
-                  </button>
-                  <button
-                    className="row-action danger"
-                    aria-label="Excluir"
-                    title="Excluir"
-                    onClick={() => setDeleting(it)}
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable
+          columns={columns}
+          rows={items}
+          loading={loading}
+          emptyMessage='Nenhum produto cadastrado ainda. Clique em "Novo" para criar o primeiro.'
+          defaultSort={{ key: 'id', dir: 'asc' }}
+        />
       </div>
 
       {editing && (

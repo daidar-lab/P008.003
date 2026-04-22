@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Plus, Pencil, Trash2, Search, RefreshCw, Upload } from 'lucide-react'
+import { Plus, Pencil, Trash2, RefreshCw, Upload } from 'lucide-react'
 import { apiGet, apiSend } from '../api.js'
 import { FIELDS, formatValue } from './entradasFiscaisFields.js'
 import EntradaFiscalForm from './EntradaFiscalForm.jsx'
 import ImportEntradasFiscaisModal from './ImportEntradasFiscaisModal.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import DataTable from '../components/DataTable.jsx'
 
 const ENDPOINT = '/entradas-fiscais'
 
@@ -12,7 +13,6 @@ export default function EntradasFiscais() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [search, setSearch] = useState('')
   const [editing, setEditing] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [importing, setImporting] = useState(false)
@@ -32,14 +32,6 @@ export default function EntradasFiscais() {
   }, [])
 
   useEffect(() => { load() }, [load])
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return items
-    return items.filter((it) =>
-      FIELDS.some((f) => String(it[f.name] ?? '').toLowerCase().includes(q))
-    )
-  }, [items, search])
 
   async function handleSave(payload) {
     setSubmitting(true)
@@ -70,6 +62,36 @@ export default function EntradasFiscais() {
     }
   }
 
+  const columns = useMemo(() => ([
+    {
+      key: 'id', label: 'ID', kind: 'number',
+      className: 'col-id', minWidth: 70,
+      format: (v) => `#${v}`
+    },
+    ...FIELDS.map((f) => ({
+      key: f.name,
+      label: f.label,
+      kind: f.kind === 'numeric' ? 'number' : (f.kind === 'date' ? 'date' : 'string'),
+      align: f.align || (f.kind === 'numeric' ? 'right' : 'left'),
+      minWidth: f.w,
+      format: (v) => formatValue(f, v)
+    })),
+    {
+      key: '__actions', label: 'Ações', className: 'col-actions sticky-right',
+      sticky: 'right', sortable: false, filterable: false,
+      render: (row) => (
+        <>
+          <button className="row-action" aria-label="Editar" title="Editar" onClick={() => setEditing(row)}>
+            <Pencil size={15} />
+          </button>
+          <button className="row-action danger" aria-label="Excluir" title="Excluir" onClick={() => setDeleting(row)}>
+            <Trash2 size={15} />
+          </button>
+        </>
+      )
+    }
+  ]), [])
+
   return (
     <>
       <div className="page-header">
@@ -94,75 +116,21 @@ export default function EntradasFiscais() {
 
       <div className="card">
         <div className="toolbar">
-          <label className="search-input">
-            <Search size={14} />
-            <input
-              type="search"
-              placeholder="Buscar por filial, NF, produto, pedido…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </label>
           <span className="count">
-            {loading ? 'Carregando…' : `${filtered.length} registro${filtered.length === 1 ? '' : 's'}`}
+            {loading ? 'Carregando…' : `${items.length} registro${items.length === 1 ? '' : 's'}`}
           </span>
         </div>
 
         {error && <div className="banner">Falha ao carregar: {error}</div>}
 
-        <div className="table-wrap">
-          <table className="crud-table wide-table">
-            <thead>
-              <tr>
-                <th className="col-id">ID</th>
-                {FIELDS.map((f) => (
-                  <th key={f.name}
-                      style={{
-                        minWidth: f.w,
-                        textAlign: f.align === 'right' ? 'right' : 'left'
-                      }}>
-                    {f.label}
-                  </th>
-                ))}
-                <th className="col-actions sticky-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!loading && filtered.length === 0 && (
-                <tr>
-                  <td colSpan={FIELDS.length + 2}>
-                    <div className="empty-state">
-                      {search ? 'Nenhum registro encontrado para essa busca.'
-                             : 'Nenhuma entrada cadastrada ainda. Clique em "Nova entrada" para criar.'}
-                    </div>
-                  </td>
-                </tr>
-              )}
-              {filtered.map((it) => (
-                <tr key={it.id}>
-                  <td className="col-id">#{it.id}</td>
-                  {FIELDS.map((f) => (
-                    <td key={f.name}
-                        style={{
-                          textAlign: f.align === 'right' ? 'right' : 'left',
-                          fontVariantNumeric: f.kind === 'numeric' ? 'tabular-nums' : 'normal'
-                        }}>
-                      {formatValue(f, it[f.name])}
-                    </td>
-                  ))}
-                  <td className="col-actions sticky-right">
-                    <button className="row-action" aria-label="Editar" title="Editar" onClick={() => setEditing(it)}>
-                      <Pencil size={15} />
-                    </button>
-                    <button className="row-action danger" aria-label="Excluir" title="Excluir" onClick={() => setDeleting(it)}>
-                      <Trash2 size={15} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={columns}
+          rows={items}
+          loading={loading}
+          wide
+          emptyMessage='Nenhuma entrada cadastrada ainda. Clique em "Nova entrada" para criar.'
+          defaultSort={{ key: 'id', dir: 'desc' }}
+        />
       </div>
 
       {editing && (

@@ -781,3 +781,61 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   box-shadow: -4px 0 6px -4px rgba(0,0,0,0.08);
 }
 .wide-table thead .sticky-right { background: var(--panel-2); }
+
+/* ---------- DataTable: sort + filter ---------- */
+.dt-wrap { width: 100%; }
+
+.crud-table thead tr:first-child th {
+  position: relative;
+  padding-top: 10px; padding-bottom: 8px;
+}
+.crud-table .th-inner {
+  display: inline-flex; align-items: center; gap: 6px;
+  width: 100%;
+}
+.crud-table .sort-ind {
+  display: inline-flex; align-items: center;
+  color: var(--accent);
+}
+.crud-table .sort-ind-dim { color: var(--text-3); opacity: 0.55; }
+.crud-table thead th:hover .sort-ind-dim { opacity: 1; color: var(--text-2); }
+
+.crud-table tr.filter-row th {
+  background: var(--panel);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-transform: none; letter-spacing: normal;
+}
+.filter-cell .col-filter-input,
+.filter-cell .col-filter-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-2);
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text);
+  outline: none;
+}
+.filter-cell .col-filter-input::placeholder { color: var(--text-3); }
+.filter-cell .col-filter-input:focus,
+.filter-cell .col-filter-select:focus {
+  border-color: var(--accent);
+  background: white;
+  box-shadow: 0 0 0 2px rgba(47, 107, 255, 0.15);
+}
+.filter-placeholder { display: block; height: 30px; }
+
+.filter-clear {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: #fdecee;
+  color: var(--red);
+}
+.filter-clear:hover { background: #fbd7da; }
+
+/* Sticky right também precisa cobrir a filter-row */
+.wide-table tr.filter-row .sticky-right,
+.wide-table tr.filter-row .col-actions { background: var(--panel); }
