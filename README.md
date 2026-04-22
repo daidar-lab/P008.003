@@ -30,10 +30,9 @@ server/               # backend
 
 1. **PostgreSQL**
 
-   Suba um Postgres local e crie o banco:
-   ```bash
-   createdb vento
-   ```
+   Tenha um Postgres rodando localmente. Por padrão a aplicação se conecta
+   à database `postgres` (a que já existe em qualquer instalação), mas
+   você pode apontar para outra em `server/.env`.
 
 2. **API**
 
@@ -41,9 +40,12 @@ server/               # backend
    cd server
    cp .env.example .env      # ajuste DATABASE_URL/credenciais
    npm install
-   npm run db:init           # aplica schema.sql + seed.sql
    npm run dev               # http://localhost:3006
    ```
+
+   O servidor aplica o `sql/schema.sql` automaticamente no startup
+   (idempotente). Se quiser popular dados de exemplo:
+   `npm run db:seed`.
 
 3. **Frontend**
 
@@ -66,5 +68,6 @@ server/               # backend
 | `GET /api/spent-amount`  | donut 72% (Marketing × Operations)      |
 | `GET /api/spending`      | tabela de categorias                    |
 | `GET /api/revenue`       | gauge Online/Retail/Wholesale + total   |
+| `… /api/tipos-entrada-saida` | CRUD (GET/POST/PUT/DELETE) dos tipos |
 
 Mais detalhes em [`server/README.md`](server/README.md).

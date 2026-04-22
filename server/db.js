@@ -8,9 +8,9 @@ const config = process.env.DATABASE_URL
   : {
       host: process.env.PGHOST || 'localhost',
       port: Number(process.env.PGPORT || 5432),
-      user: process.env.PGUSER || 'vento',
-      password: process.env.PGPASSWORD || 'vento',
-      database: process.env.PGDATABASE || 'vento'
+      user: process.env.PGUSER || 'postgres',
+      password: process.env.PGPASSWORD || 'postgres',
+      database: process.env.PGDATABASE || 'postgres'
     }
 
 export const pool = new Pool({

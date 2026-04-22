@@ -16,27 +16,32 @@ Copie o exemplo de variáveis de ambiente:
 cp .env.example .env
 ```
 
-Edite `.env` com suas credenciais, ou defina `DATABASE_URL`:
+Por padrão a aplicação se conecta à database **`postgres`** (a que já
+existe em qualquer instalação do Postgres). Você pode apontar para
+qualquer outra database editando `.env`:
 
 ```
-DATABASE_URL=postgres://user:password@localhost:5432/vento
+# a aplicação cria as tabelas necessárias na database que você apontar
+DATABASE_URL=postgres://user:password@localhost:5432/postgres
 PORT=3006
 CORS_ORIGIN=http://localhost:5173
 ```
 
 ## Banco de dados
 
-Crie o banco e aplique o schema + seed de dados:
+O servidor aplica o `sql/schema.sql` **automaticamente no startup**
+(idempotente, todos os `CREATE TABLE` usam `IF NOT EXISTS`). Basta ter
+o Postgres acessível — não precisa criar a database nem rodar script
+manual.
+
+Se quiser popular dados de exemplo (dashboard + alguns "Tipos de
+Entrada/Saída"):
 
 ```bash
-createdb vento                   # se o usuário tiver permissão
-npm install
-npm run db:init                  # aplica schema.sql e seed.sql
-# ou apenas:
-npm run db:seed                  # re-popula (TRUNCATE + INSERT)
+npm run db:seed     # TRUNCATE + INSERT nos dados de exemplo
 ```
 
-Alternativa com `psql` direto:
+Alternativa explícita com `psql`:
 
 ```bash
 psql "$DATABASE_URL" -f sql/schema.sql
@@ -50,7 +55,12 @@ npm run dev        # node --watch
 npm start          # produção
 ```
 
-Saída esperada: `▲ Vento API on http://localhost:3006`
+Saída esperada no boot:
+
+```
+✓ schema ensured
+▲ Vento API on http://localhost:3006
+```
 
 ## Endpoints
 
