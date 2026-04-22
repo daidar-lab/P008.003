@@ -918,3 +918,52 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   color: var(--text-3);
   letter-spacing: 0;
 }
+
+/* ---------- NF Variation card (Home 2) ---------- */
+.nf-card { gap: 4px; }
+.nf-primary { margin: 2px 0 8px; }
+.nf-sublabel {
+  display: block;
+  font-size: 10.5px;
+  color: var(--text-3);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.nf-value-xl {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--red);
+  margin: 2px 0 6px;
+}
+.nf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.nf-cell { min-width: 0; }
+.nf-value-md {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.nf-value-sm {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+.nf-value-sm strong { font-weight: 700; }
+.nf-muted {
+  color: var(--text-3);
+  font-weight: 500;
+  font-size: 12px;
+}

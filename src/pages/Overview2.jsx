@@ -1,3 +1,4 @@
+import { ArrowUpRight, TrendingDown } from 'lucide-react'
 import TopBar from '../components/TopBar.jsx'
 import StatCard from '../components/StatCard.jsx'
 import VentoAI from '../components/VentoAI.jsx'
@@ -13,57 +14,75 @@ const STAT_FALLBACK = [
   { key: 'orders',    title: 'Orders',    dotColor: '#19b26b', value: 23845, deltaPercent: 18, trend: 'down', period: 'since last month' }
 ]
 
-const formatValue = (n) => new Intl.NumberFormat('pt-BR').format(n)
+const fmtInt = (n) => new Intl.NumberFormat('pt-BR').format(n)
+const fmtMoney = (n) => new Intl.NumberFormat('pt-BR', {
+  style: 'currency', currency: 'BRL'
+}).format(n)
+const fmtPct = (n) => new Intl.NumberFormat('pt-BR', {
+  minimumFractionDigits: 1, maximumFractionDigits: 2
+}).format(n)
 
 export default function Overview2() {
   const { data: stats } = useApi('/stats', { fallback: STAT_FALLBACK })
-  const { data: nfMetric } = useApi('/entradas-fiscais/metrics/nf-menor-que-negociado', {
+  const { data: nf } = useApi('/entradas-fiscais/metrics/nf-menor-que-negociado', {
     fallback: { count: 0, total: 0, percent: 0, valorizacao: 0, valorTotal: 0, percentValorizacao: 0 }
   })
 
-  // Usa os stats da API, mas ignora 'total_views' — o primeiro card passa a
-  // mostrar a contagem de itens com valor NF < valor negociado de compras.
   const otherStats = (stats || []).filter((s) => s.key !== 'total_views').slice(0, 2)
 
-  const nfPercent            = Number(nfMetric?.percent ?? 0)
-  const nfTotal              = Number(nfMetric?.total ?? 0)
-  const nfCount              = Number(nfMetric?.count ?? 0)
-  const nfValorizacao        = Number(nfMetric?.valorizacao ?? 0)
-  const nfPercentValorizacao = Number(nfMetric?.percentValorizacao ?? 0)
-  const fmtPercent = (n) => new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: 1, maximumFractionDigits: 2
-  }).format(n)
-  const nfPercentLabel            = fmtPercent(nfPercent)
-  const nfPercentValorizacaoLabel = fmtPercent(nfPercentValorizacao)
-  const nfValorizacaoLabel = new Intl.NumberFormat('pt-BR', {
-    style: 'currency', currency: 'BRL'
-  }).format(nfValorizacao)
+  const valorizacao        = Number(nf?.valorizacao ?? 0)
+  const valorTotal         = Number(nf?.valorTotal ?? 0)
+  const percentValorizacao = Number(nf?.percentValorizacao ?? 0)
+  const count              = Number(nf?.count ?? 0)
+  const total              = Number(nf?.total ?? 0)
+  const percentItens       = Number(nf?.percent ?? 0)
 
   return (
     <>
       <TopBar />
 
       <section className="grid row-1">
-        <StatCard
-          title="Itens NF < Negociado"
-          dotColor="#e5484d"
-          value={formatValue(nfCount)}
-          delta={`${nfPercentLabel}% de ${formatValue(nfTotal)} itens`}
-          trend="down"
-          extra={
-            <>
-              <span className="label">Valorização</span>
-              {nfValorizacaoLabel}
-              <span className="stat-extra-pct"> · {nfPercentValorizacaoLabel}% do total</span>
-            </>
-          }
-        />
+        <div className="card nf-card">
+          <div className="card-head">
+            <span className="card-title">
+              <span className="dot" style={{ background: '#e5484d' }} />
+              Itens NF &lt; Negociado
+            </span>
+            <button className="card-arrow" aria-label="Open">
+              <ArrowUpRight size={14} />
+            </button>
+          </div>
+
+          <div className="nf-primary">
+            <span className="nf-sublabel">Valorização</span>
+            <div className="nf-value-xl">{fmtMoney(valorizacao)}</div>
+            <div className="stat-delta down">
+              <TrendingDown size={13} />
+              <span>{fmtPct(percentValorizacao)}% do valor total</span>
+            </div>
+          </div>
+
+          <div className="nf-grid">
+            <div className="nf-cell">
+              <span className="nf-sublabel">Valor total</span>
+              <div className="nf-value-md">{fmtMoney(valorTotal)}</div>
+            </div>
+            <div className="nf-cell">
+              <span className="nf-sublabel">Itens</span>
+              <div className="nf-value-sm">
+                <strong>{fmtInt(count)}</strong>
+                <span className="nf-muted"> de {fmtInt(total)} · {fmtPct(percentItens)}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {otherStats.map((s) => (
           <StatCard
             key={s.key}
             title={s.title}
             dotColor={s.dotColor}
-            value={formatValue(s.value)}
+            value={fmtInt(s.value)}
             delta={`${s.deltaPercent}% ${s.period}`}
             trend={s.trend}
           />
