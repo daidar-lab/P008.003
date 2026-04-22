@@ -10,6 +10,11 @@ async function parseError(res, path) {
   if (payload) {
     msg = payload.message || payload.error || body
   }
+  // Vite proxy error when the API is offline comes back as 500 text/plain
+  // with "AggregateError" / "ECONNREFUSED" — rewrite to something actionable.
+  if (!payload && /ECONNREFUSED|AggregateError|socket hang up/i.test(body)) {
+    msg = 'API indisponível. Verifique se o servidor em :3006 está rodando (npm run dev:api).'
+  }
   const err = new Error(msg || `HTTP ${res.status}`)
   err.status = res.status
   err.path = path

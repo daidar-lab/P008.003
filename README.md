@@ -28,34 +28,38 @@ server/               # backend
 
 ## Rodando em desenvolvimento
 
-1. **PostgreSQL**
+### Setup único (faça uma vez)
 
-   Tenha um Postgres rodando localmente. Por padrão a aplicação se conecta
-   à database `postgres` (a que já existe em qualquer instalação), mas
-   você pode apontar para outra em `server/.env`.
+```bash
+# Postgres rodando localmente — por padrão a aplicação se conecta à
+# database "postgres" (que já existe em qualquer instalação).
+# Ajustes de credenciais ficam em server/.env:
+cp server/.env.example server/.env
 
-2. **API**
+# instala dependências do frontend e do backend
+npm run install:all
+```
 
-   ```bash
-   cd server
-   cp .env.example .env      # ajuste DATABASE_URL/credenciais
-   npm install
-   npm run dev               # http://localhost:3006
-   ```
+O servidor aplica o `sql/schema.sql` automaticamente no startup
+(idempotente). Se quiser popular dados de exemplo:
+`npm --prefix server run db:seed`.
 
-   O servidor aplica o `sql/schema.sql` automaticamente no startup
-   (idempotente). Se quiser popular dados de exemplo:
-   `npm run db:seed`.
+### Rodando o app (um único comando)
 
-3. **Frontend**
+```bash
+npm run dev
+```
 
-   ```bash
-   npm install
-   npm run dev               # http://localhost:5173
-   ```
+Isso sobe **frontend + API juntos** via `concurrently`:
 
-   O Vite faz proxy de `/api` para a API, então o frontend consome
-   `/api/stats`, `/api/performance`, etc. sem configuração adicional.
+- `web` → Vite em http://localhost:5173
+- `api` → Express em http://localhost:3006
+
+> ⚠️ Se só o Vite estiver rodando, qualquer chamada a `/api/*` vai
+> falhar no proxy com `ECONNREFUSED` e o browser verá `500 Internal
+> Server Error`. A API **precisa** estar no ar.
+
+Precisa rodar só um dos dois? `npm run dev:web` ou `npm run dev:api`.
 
 ## Endpoints
 
