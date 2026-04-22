@@ -7,7 +7,7 @@ const router = Router()
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024, files: 1 }
+  limits: { fileSize: 100 * 1024 * 1024, files: 1 }
 })
 
 /**
@@ -177,11 +177,22 @@ const INSERT_SQL = (() => {
           RETURNING id, ${DB_COLS}, created_at, updated_at`
 })()
 
-const INSERT_SQL_NO_RET = (() => {
+// Bulk insert via unnest(): um array por coluna, qualquer tamanho de
+// lote usa sempre 16 parâmetros (evita o limite de 65535 params do pg).
+const BULK_INSERT_SQL = (() => {
   const cols = FIELDS.map(f => f.db).join(', ')
-  const ph = FIELDS.map((_, i) => `$${i + 1}`).join(', ')
-  return `INSERT INTO entradas_fiscais (${cols}) VALUES (${ph})`
+  const args = FIELDS.map((f, i) => {
+    const t = f.kind === 'numeric' ? 'numeric'
+            : f.kind === 'date'    ? 'date'
+            : 'varchar'
+    return `$${i + 1}::${t}[]`
+  }).join(', ')
+  return `INSERT INTO entradas_fiscais (${cols})
+          SELECT * FROM unnest(${args})`
 })()
+
+const IMPORT_BATCH_SIZE = 5000
+const IMPORT_MAX_ROWS   = 500_000
 
 const UPDATE_SQL = (() => {
   const sets = FIELDS.map((f, i) => `${f.db} = $${i + 1}`).join(', ')
@@ -263,10 +274,10 @@ router.post('/import', (req, res, next) => {
       if (!sheet) return res.status(400).json({ error: 'empty_file' })
       const raw = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false })
 
-      if (raw.length > 5000) {
+      if (raw.length > IMPORT_MAX_ROWS) {
         return res.status(413).json({
           error: 'too_many_rows',
-          message: `Limite de 5000 linhas (recebido ${raw.length})`
+          message: `Limite de ${IMPORT_MAX_ROWS.toLocaleString('pt-BR')} linhas (recebido ${raw.length.toLocaleString('pt-BR')})`
         })
       }
 
@@ -296,7 +307,7 @@ router.post('/import', (req, res, next) => {
           })
           return
         }
-        valid.push({ rowNum, values })
+        valid.push(values)
       })
 
       if (errors.length && valid.length === 0) {
@@ -308,13 +319,21 @@ router.post('/import', (req, res, next) => {
         })
       }
 
+      const batches = Math.ceil(valid.length / IMPORT_BATCH_SIZE)
+      const startedAt = Date.now()
       const client = await pool.connect()
       let inserted = 0
       try {
         await client.query('BEGIN')
-        for (const r of valid) {
-          await client.query(INSERT_SQL_NO_RET, paramsFromValues(r.values))
-          inserted++
+        for (let b = 0; b < batches; b++) {
+          const chunk = valid.slice(b * IMPORT_BATCH_SIZE, (b + 1) * IMPORT_BATCH_SIZE)
+          // Para cada coluna, monta um array com os valores daquela coluna no bloco.
+          const columnArrays = FIELDS.map(f => chunk.map(v => v[f.camel] ?? null))
+          await client.query(BULK_INSERT_SQL, columnArrays)
+          inserted += chunk.length
+          if (b === 0 || (b + 1) % 5 === 0 || b === batches - 1) {
+            console.log(`[import entradas_fiscais] bloco ${b + 1}/${batches} · +${chunk.length} linhas (acum ${inserted})`)
+          }
         }
         await client.query('COMMIT')
       } catch (e) {
@@ -323,8 +342,18 @@ router.post('/import', (req, res, next) => {
       } finally {
         client.release()
       }
+      const elapsedMs = Date.now() - startedAt
 
-      res.json({ totalRows: raw.length, inserted, updated: 0, skipped: 0, errors })
+      res.json({
+        totalRows: raw.length,
+        inserted,
+        updated: 0,
+        skipped: 0,
+        batches,
+        batchSize: IMPORT_BATCH_SIZE,
+        elapsedMs,
+        errors
+      })
     } catch (err) { next(err) }
   })
 })

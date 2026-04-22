@@ -94,20 +94,35 @@ export default function ImportEntradasFiscaisModal({ onCancel, onImported }) {
                     </div>
                   : <div>
                       <strong>Selecionar arquivo</strong>
-                      <small>ou arraste e solte aqui (.xlsx até 10MB)</small>
+                      <small>ou arraste e solte aqui (.xlsx até 100MB, 500.000 linhas)</small>
                     </div>
                 }
               </label>
+              <div className="import-hint" style={{ marginTop: 10 }}>
+                <span>
+                  Inserção em blocos de <strong>5.000 registros</strong> por vez.
+                  Tudo roda em uma transação única — se der erro, nada é gravado.
+                </span>
+              </div>
             </>
           )}
 
           {result && (
             <div className="import-result">
               <div className="result-totals">
-                <Stat label="Linhas"    value={result.totalRows} />
-                <Stat label="Inseridas" value={result.inserted} tone="ok" />
+                <Stat label="Linhas"    value={(result.totalRows ?? 0).toLocaleString('pt-BR')} />
+                <Stat label="Inseridas" value={(result.inserted ?? 0).toLocaleString('pt-BR')} tone="ok" />
+                <Stat label="Blocos"    value={result.batches ?? 0} tone="info" />
                 <Stat label="Erros"     value={result.errors?.length || 0} tone={result.errors?.length ? 'err' : 'muted'} />
               </div>
+              {result.elapsedMs != null && (
+                <div className="import-hint" style={{ justifyContent: 'center' }}>
+                  <span>
+                    Processado em <strong>{(result.elapsedMs / 1000).toFixed(1)}s</strong>
+                    {result.batchSize ? ` · blocos de ${result.batchSize.toLocaleString('pt-BR')} registros` : ''}
+                  </span>
+                </div>
+              )}
 
               {result.errors?.length > 0 && (
                 <div className="result-errors">
