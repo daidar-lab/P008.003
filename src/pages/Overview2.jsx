@@ -9,22 +9,35 @@ import Revenue from '../components/Revenue.jsx'
 import { useApi } from '../api.js'
 
 const STAT_FALLBACK = [
-  { key: 'total_views', title: 'Total views', dotColor: '#e5484d', value: 253056, deltaPercent: 12, trend: 'down', period: 'since last month' },
-  { key: 'customers',   title: 'Customers',   dotColor: '#d946ef', value: 12375,  deltaPercent: 7,  trend: 'down', period: 'since last month' },
-  { key: 'orders',      title: 'Orders',      dotColor: '#19b26b', value: 23845,  deltaPercent: 18, trend: 'down', period: 'since last month' }
+  { key: 'customers', title: 'Customers', dotColor: '#d946ef', value: 12375, deltaPercent: 7,  trend: 'down', period: 'since last month' },
+  { key: 'orders',    title: 'Orders',    dotColor: '#19b26b', value: 23845, deltaPercent: 18, trend: 'down', period: 'since last month' }
 ]
 
-const formatValue = (n) => new Intl.NumberFormat('en-US').format(n)
+const formatValue = (n) => new Intl.NumberFormat('pt-BR').format(n)
 
 export default function Overview2() {
   const { data: stats } = useApi('/stats', { fallback: STAT_FALLBACK })
+  const { data: nfMetric } = useApi('/entradas-fiscais/metrics/nf-menor-que-negociado', {
+    fallback: { count: 0 }
+  })
+
+  // Usa os stats da API, mas ignora 'total_views' — o primeiro card passa a
+  // mostrar a contagem de itens com valor NF < valor negociado de compras.
+  const otherStats = (stats || []).filter((s) => s.key !== 'total_views').slice(0, 2)
 
   return (
     <>
       <TopBar />
 
       <section className="grid row-1">
-        {stats.map((s) => (
+        <StatCard
+          title="Itens NF < Negociado"
+          dotColor="#e5484d"
+          value={formatValue(nfMetric?.count ?? 0)}
+          delta="valor NF menor que valor de compras"
+          trend="down"
+        />
+        {otherStats.map((s) => (
           <StatCard
             key={s.key}
             title={s.title}

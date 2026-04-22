@@ -357,6 +357,20 @@ router.post('/import', (req, res, next) => {
   })
 })
 
+// METRICS: quantidade de itens onde valor_nota_fiscal < valor_negociado_compras
+router.get('/metrics/nf-menor-que-negociado', async (_req, res, next) => {
+  try {
+    const { rows } = await query(
+      `SELECT COUNT(*)::int AS count
+       FROM entradas_fiscais
+       WHERE valor_nota_fiscal IS NOT NULL
+         AND valor_negociado_compras IS NOT NULL
+         AND valor_nota_fiscal < valor_negociado_compras`
+    )
+    res.json({ count: rows[0].count })
+  } catch (err) { next(err) }
+})
+
 // GET ONE
 router.get('/:id', async (req, res, next) => {
   try {
