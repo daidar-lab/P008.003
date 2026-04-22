@@ -2,8 +2,15 @@
 
 TRUNCATE stats, balance_buckets, performance_weeks, spent_shares,
          spending_categories, revenue_channels, revenue_totals,
-         tipos_entrada_saida
+         tipos_entrada_saida, produtos
 RESTART IDENTITY;
+
+INSERT INTO produtos (codigo, descricao) VALUES
+  ('PRD-001', 'Camiseta básica branca'),
+  ('PRD-002', 'Camiseta básica preta'),
+  ('PRD-003', 'Calça jeans azul'),
+  ('PRD-004', 'Tênis esportivo'),
+  ('PRD-005', 'Jaqueta corta-vento');
 
 INSERT INTO tipos_entrada_saida (codigo, descricao, considera_analise) VALUES
   ('ENT-001', 'Venda à vista',          TRUE),

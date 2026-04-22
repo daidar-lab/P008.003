@@ -70,3 +70,15 @@ ALTER TABLE tipos_entrada_saida
 
 CREATE INDEX IF NOT EXISTS tipos_entrada_saida_descricao_idx
   ON tipos_entrada_saida (descricao);
+
+-- Cadastros: produtos
+CREATE TABLE IF NOT EXISTS produtos (
+  id         SERIAL PRIMARY KEY,
+  codigo     VARCHAR(50)  NOT NULL UNIQUE,
+  descricao  VARCHAR(250) NOT NULL,
+  created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS produtos_descricao_idx
+  ON produtos (descricao);
