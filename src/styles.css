@@ -1332,3 +1332,38 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 800ms linear infinite; }
+
+/* Filtro de filial inline no TopBar */
+.topbar-filial {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--panel);
+  padding: 5px 8px 5px 12px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.topbar-filial-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--text-3);
+}
+.topbar-filial-select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 8px;
+  background: var(--panel-2);
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text);
+  min-width: 170px;
+  outline: none;
+}
+.topbar-filial-select:focus {
+  border-color: var(--accent);
+  background: white;
+  box-shadow: 0 0 0 2px rgba(47, 107, 255, 0.15);
+}

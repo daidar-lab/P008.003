@@ -1,4 +1,4 @@
-import { Share2 } from 'lucide-react'
+import { Share2, Building2 } from 'lucide-react'
 import { useState } from 'react'
 
 export const PERIOD_THIS_MONTH = 'Este mês'
@@ -11,16 +11,41 @@ export default function TopBar({
   period,
   onPeriodChange,
   customRange,
-  onCustomRangeChange
+  onCustomRangeChange,
+  filiais,
+  codigoFilial,
+  onCodigoFilialChange
 }) {
   const [internalActive, setInternalActive] = useState(PERIOD_THIS_MONTH)
   const controlled = typeof onPeriodChange === 'function'
   const active = controlled ? period : internalActive
   const setActive = controlled ? onPeriodChange : setInternalActive
 
+  const showFilial = typeof onCodigoFilialChange === 'function' && Array.isArray(filiais)
+
   return (
     <div className="topbar">
       <h1 className="page-title">Dashboard</h1>
+
+      {showFilial && (
+        <label className="topbar-filial" title="Filtrar por filial">
+          <Building2 size={14} />
+          <span className="topbar-filial-label">Filial</span>
+          <select
+            value={codigoFilial || ''}
+            onChange={(e) => onCodigoFilialChange(e.target.value)}
+            className="topbar-filial-select"
+          >
+            <option value="">Todas</option>
+            {filiais.map((f) => (
+              <option key={f.id} value={f.codigo}>
+                {f.codigo} — {f.abreviatura}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
       <div className="tabs" role="tablist">
         {TABS.map((t) => (
           <button

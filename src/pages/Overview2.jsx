@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { Building2 } from 'lucide-react'
 import TopBar, {
   PERIOD_THIS_MONTH, PERIOD_LAST_MONTH
 } from '../components/TopBar.jsx'
@@ -92,38 +91,10 @@ export default function Overview2() {
         onPeriodChange={setPeriod}
         customRange={customRange}
         onCustomRangeChange={setCustomRange}
+        filiais={filiaisList}
+        codigoFilial={codigoFilial}
+        onCodigoFilialChange={setCodigoFilial}
       />
-
-      <div className="filial-bar">
-        <label htmlFor="filial-select" className="filial-bar-label">
-          <Building2 size={14} />
-          <span>Filial</span>
-        </label>
-        <select
-          id="filial-select"
-          className="filial-select"
-          value={codigoFilial}
-          onChange={(e) => setCodigoFilial(e.target.value)}
-        >
-          <option value="">Todas as filiais</option>
-          {filiaisList.map((f) => (
-            <option key={f.id} value={f.codigo}>
-              {f.codigo} — {f.abreviatura}
-              {f.descricao ? ` · ${f.descricao}` : ''}
-            </option>
-          ))}
-        </select>
-        {codigoFilial && (
-          <button
-            type="button"
-            className="btn btn-ghost filial-clear"
-            onClick={() => setCodigoFilial('')}
-            title="Limpar filtro"
-          >
-            Limpar
-          </button>
-        )}
-      </div>
 
       <section className="grid row-nf">
         {CARDS.map((c) => (
