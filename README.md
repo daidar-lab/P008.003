@@ -36,8 +36,8 @@ server/               # backend
 # Ajustes de credenciais ficam em server/.env:
 cp server/.env.example server/.env
 
-# instala dependências do frontend e do backend
-npm run install:all
+# instala dependências (o postinstall instala também as do server/)
+npm install
 ```
 
 O servidor aplica o `sql/schema.sql` automaticamente no startup

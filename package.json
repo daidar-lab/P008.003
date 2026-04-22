@@ -4,9 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "postinstall": "node scripts/ensure-server-deps.js",
     "dev": "concurrently -n web,api -c blue,magenta \"npm:dev:web\" \"npm:dev:api\"",
     "dev:web": "vite",
-    "dev:api": "npm --prefix server run dev",
+    "dev:api": "node scripts/ensure-server-deps.js && npm --prefix server run dev",
     "build": "vite build",
     "preview": "vite preview",
     "install:all": "npm install && npm --prefix server install"
