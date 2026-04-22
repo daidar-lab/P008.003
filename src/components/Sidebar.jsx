@@ -1,29 +1,18 @@
 import { useState } from 'react'
 import {
-  Home, Package, Bell, Search, FileBarChart, Plus, MoreVertical,
-  FolderOpen, ChevronDown, ChevronRight, ArrowRightLeft, ShoppingBag, Receipt
+  Home, MoreVertical,
+  FolderOpen, ChevronDown, ChevronRight,
+  ArrowRightLeft, ShoppingBag, Receipt
 } from 'lucide-react'
 
 const primary = [
-  { icon: Home, label: 'Home', route: 'overview' },
-  { icon: Package, label: 'Inventory' },
-  { icon: Bell, label: 'Notification', kbd: '⌘N' },
-  { icon: Search, label: 'Search', kbd: '⌘S' },
-  { icon: FileBarChart, label: 'Report Builder' }
+  { icon: Home,    label: 'Home',             route: 'overview' },
+  { icon: Receipt, label: 'Entradas Fiscais', route: 'entradas-fiscais' }
 ]
 
 const cadastros = [
   { icon: ArrowRightLeft, label: 'Tipo de Entrada e Saída', route: 'tipos-entrada-saida' },
-  { icon: ShoppingBag,    label: 'Produtos',                route: 'produtos' },
-  { icon: Receipt,        label: 'Entradas Fiscais',        route: 'entradas-fiscais' }
-]
-
-const dashboard = [
-  { label: 'Customer', color: '#f59e0b' },
-  { label: 'Performance', color: '#f5c518' },
-  { label: 'Tracking', color: '#7a4a1f' },
-  { label: 'Finance', color: '#e5484d' },
-  { label: 'Marketing', color: '#e5484d' }
+  { icon: ShoppingBag,    label: 'Produtos',                route: 'produtos' }
 ]
 
 export default function Sidebar({ route, onNavigate }) {
@@ -78,20 +67,6 @@ export default function Sidebar({ route, onNavigate }) {
             ))}
           </div>
         )}
-      </nav>
-
-      <div className="nav-section">My dashboard</div>
-      <nav className="nav">
-        {dashboard.map((item) => (
-          <button key={item.label} className="nav-item">
-            <span className="dot" style={{ background: item.color }} />
-            <span>{item.label}</span>
-          </button>
-        ))}
-        <button className="add-new">
-          <Plus size={16} strokeWidth={2.2} />
-          <span>Add new</span>
-        </button>
       </nav>
 
       <div className="profile">
