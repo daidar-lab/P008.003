@@ -5,6 +5,7 @@ import {
   ResponsiveContainer, Tooltip
 } from 'recharts'
 import { useApi } from '../api.js'
+import DayDetailsModal from './DayDetailsModal.jsx'
 
 const GREEN = '#19b26b'
 const RED   = '#e5484d'
@@ -89,7 +90,7 @@ function VariationChart({
   const shortFmt = granularity === 'month' ? fmtMonthShort : fmtDayShort
   const longFmt  = granularity === 'month' ? fmtMonthLong  : fmtDayLong
   const Tip = makeVarTooltip(longFmt)
-  const clickable = typeof onBarClick === 'function' && granularity === 'month'
+  const clickable = typeof onBarClick === 'function'
   const handleClick = clickable
     ? (payload) => { if (payload?.date) onBarClick(payload) }
     : undefined
@@ -148,6 +149,8 @@ export default function TotalBalance({ range, filter, codigoFilial }) {
   // drill-down: quando o usuário clica numa coluna mensal, fixa o
   // intervalo naquele mês e o endpoint volta a agrupar por dia.
   const [drillDown, setDrillDown] = useState(null)
+  // Clique em coluna diária abre o modal de detalhes do dia.
+  const [detailsDate, setDetailsDate] = useState(null)
 
   // Quando o intervalo externo muda, descarta drill-down antigo.
   useEffect(() => { setDrillDown(null) }, [range?.from, range?.to])
@@ -191,12 +194,15 @@ export default function TotalBalance({ range, filter, codigoFilial }) {
     : 'Todos os períodos'
 
   const handleBarClick = useMemo(
-    () => (granularity === 'month'
-      ? (payload) => {
-          const m = monthBounds(payload?.date)
-          if (m) setDrillDown({ from: m.from, to: m.to, label: m.label })
-        }
-      : null),
+    () => (payload) => {
+      if (!payload?.date) return
+      if (granularity === 'month') {
+        const m = monthBounds(payload.date)
+        if (m) setDrillDown({ from: m.from, to: m.to, label: m.label })
+      } else {
+        setDetailsDate(payload.date)
+      }
+    },
     [granularity]
   )
 
@@ -270,7 +276,11 @@ export default function TotalBalance({ range, filter, codigoFilial }) {
           <span className="legend-item"><span className="dot" style={{ background: RED }} />NF &gt; Negociado</span>
           <span className="legend-item" style={{ marginLeft: 'auto', color: 'var(--text-3)' }}>
             {bucketsCount} {bucketsCount === 1 ? unitLabel : unitLabelPlural}
-            {granularity === 'month' && <span style={{ marginLeft: 4, opacity: 0.7 }}>(mensal · clique para detalhar)</span>}
+            <span style={{ marginLeft: 4, opacity: 0.7 }}>
+              {granularity === 'month'
+                ? '(mensal · clique para detalhar)'
+                : '(diário · clique para ver documentos)'}
+            </span>
           </span>
         </div>
       </div>
@@ -346,6 +356,15 @@ export default function TotalBalance({ range, filter, codigoFilial }) {
             </div>
           </div>
         </div>
+      )}
+
+      {detailsDate && (
+        <DayDetailsModal
+          date={detailsDate}
+          codigoFilial={codigoFilial}
+          filter={filter}
+          onClose={() => setDetailsDate(null)}
+        />
       )}
     </>
   )

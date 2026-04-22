@@ -125,3 +125,16 @@ CREATE INDEX IF NOT EXISTS entradas_fiscais_produto_idx
   ON entradas_fiscais (codigo_produto);
 CREATE INDEX IF NOT EXISTS entradas_fiscais_data_idx
   ON entradas_fiscais (data_emissao_nota_fiscal);
+
+-- Justificativas (comentários) por linha de entrada fiscal
+CREATE TABLE IF NOT EXISTS justificativas_entrada_fiscal (
+  id                SERIAL PRIMARY KEY,
+  entrada_fiscal_id INT NOT NULL
+    REFERENCES entradas_fiscais(id) ON DELETE CASCADE,
+  comentario        TEXT NOT NULL,
+  autor             VARCHAR(120),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS justificativas_entrada_fiscal_ef_idx
+  ON justificativas_entrada_fiscal (entrada_fiscal_id);

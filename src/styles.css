@@ -1150,3 +1150,167 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   padding: 6px 10px;
   font-size: 12px;
 }
+
+/* ---------- Day details modal ---------- */
+.details-modal { max-width: none; }
+.details-body { padding: 0 !important; }
+
+.details-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 0;
+  overflow: hidden;
+}
+@media (max-width: 1100px) {
+  .details-grid { grid-template-columns: 1fr; }
+  .details-side { border-left: 0 !important; border-top: 1px solid var(--border); }
+}
+
+.details-table-wrap {
+  overflow: auto;
+  padding: 6px 0 12px;
+}
+.details-table-wrap .crud-table { font-size: 12px; }
+.details-table-wrap .crud-table th,
+.details-table-wrap .crud-table td { white-space: nowrap; padding: 8px 10px; }
+
+.details-row:hover td { background: #f6f7fa; }
+.details-row.selected td {
+  background: #eef3ff !important;
+}
+.details-row.selected .col-id { color: var(--accent); font-weight: 700; }
+
+.just-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.just-badge.empty { background: var(--panel-2); color: var(--text-3); }
+.just-badge.has   { background: #fff4e3; color: #b8700e; }
+
+.details-side {
+  border-left: 1px solid var(--border);
+  background: var(--panel-2);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.details-side-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px;
+  color: var(--text-3);
+  text-align: center;
+}
+.details-side-empty p { max-width: 220px; font-size: 13px; line-height: 1.5; }
+
+.details-side-head { padding: 16px 18px 8px; border-bottom: 1px solid var(--border); }
+.details-side-label {
+  font-size: 10.5px; color: var(--text-3);
+  font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.details-side h3 {
+  font-size: 14px; font-weight: 700; margin: 0 0 4px;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.details-side-meta { font-size: 11.5px; color: var(--text-3); line-height: 1.5; }
+
+.details-divergence {
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.details-divergence-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; color: var(--text-2);
+}
+.details-divergence-row strong {
+  color: var(--text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.just-form {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.just-form label {
+  font-size: 11px; font-weight: 600;
+  color: var(--text-2);
+  margin-top: 8px;
+}
+.just-form label:first-of-type { margin-top: 0; }
+.just-form input, .just-form textarea {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: white;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+.just-form input:focus, .just-form textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(47, 107, 255, 0.15);
+}
+.just-form textarea { resize: vertical; min-height: 72px; }
+.just-form-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px;
+}
+.hint-counter { font-size: 11px; color: var(--text-3); }
+.just-form .btn-primary { padding: 7px 12px; font-size: 12px; }
+
+.just-list {
+  padding: 12px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.just-list-head {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.just-empty {
+  font-size: 12px; color: var(--text-3);
+  font-style: italic;
+  padding: 8px 0;
+}
+.just-item {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.just-item-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 4px;
+}
+.just-item-head strong { font-size: 12px; color: var(--text); }
+.just-item-head span {
+  font-size: 11px; color: var(--text-3);
+  margin-left: auto;
+}
+.just-item-head .row-action { width: 24px; height: 24px; }
+.just-item-body { font-size: 12.5px; color: var(--text); line-height: 1.5; overflow-wrap: anywhere; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 800ms linear infinite; }

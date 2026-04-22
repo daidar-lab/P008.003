@@ -595,6 +595,137 @@ router.get('/metrics/variacao-diaria', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// DAY DETAILS: linhas de um dia específico com mesmos filtros de categoria/filial
+router.get('/dia/:date', async (req, res, next) => {
+  try {
+    const date = String(req.params.date || '')
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'invalid_date' })
+    }
+    const { maxPercent, minPercent, codigoFilial } = readRange(req)
+    const op = req.query.op === 'lt' || req.query.op === 'gt' ? req.query.op : null
+
+    const params = [date]
+    const where = [
+      `codigo_tipo_entrada IN (SELECT codigo FROM tipos_entrada_saida WHERE considera_analise = TRUE)`,
+      `data_emissao_nota_fiscal = $1`
+    ]
+    if (codigoFilial) { params.push(codigoFilial); where.push(`codigo_filial = $${params.length}`) }
+    if (op) {
+      const cmp = op === 'gt' ? '>' : '<'
+      where.push(`valor_nota_fiscal ${cmp} valor_negociado_compras`)
+      if (typeof maxPercent === 'number') {
+        const factor = op === 'gt' ? 1 + maxPercent / 100 : 1 - maxPercent / 100
+        params.push(factor)
+        where.push(op === 'gt'
+          ? `valor_nota_fiscal <= valor_negociado_compras * $${params.length}`
+          : `valor_nota_fiscal >= valor_negociado_compras * $${params.length}`)
+      }
+      if (typeof minPercent === 'number') {
+        const factor = op === 'gt' ? 1 + minPercent / 100 : 1 - minPercent / 100
+        params.push(factor)
+        where.push(op === 'gt'
+          ? `valor_nota_fiscal > valor_negociado_compras * $${params.length}`
+          : `valor_nota_fiscal < valor_negociado_compras * $${params.length}`)
+      }
+    }
+
+    const { rows } = await query(
+      `SELECT ef.id, ${DB_COLS.split(', ').map(c => `ef.${c}`).join(', ')},
+              ef.created_at, ef.updated_at,
+              COALESCE(j.cnt, 0)::int AS justificativas_count
+         FROM entradas_fiscais ef
+         LEFT JOIN (
+           SELECT entrada_fiscal_id, COUNT(*) AS cnt
+             FROM justificativas_entrada_fiscal
+            GROUP BY entrada_fiscal_id
+         ) j ON j.entrada_fiscal_id = ef.id
+         WHERE ${where.join(' AND ')}
+         ORDER BY ef.id ASC`,
+      params
+    )
+    res.json(rows.map((r) => ({
+      ...mapRowDbToApi(r),
+      justificativasCount: r.justificativas_count
+    })))
+  } catch (err) { next(err) }
+})
+
+// JUSTIFICATIVAS (comentários) por linha de entrada fiscal
+router.get('/:id/justificativas', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'invalid_id' })
+    }
+    const { rows } = await query(
+      `SELECT id, entrada_fiscal_id, comentario, autor, created_at
+         FROM justificativas_entrada_fiscal
+        WHERE entrada_fiscal_id = $1
+        ORDER BY created_at ASC, id ASC`,
+      [id]
+    )
+    res.json(rows.map((r) => ({
+      id: r.id,
+      entradaFiscalId: r.entrada_fiscal_id,
+      comentario: r.comentario,
+      autor: r.autor,
+      createdAt: r.created_at
+    })))
+  } catch (err) { next(err) }
+})
+
+router.post('/:id/justificativas', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'invalid_id' })
+    }
+    const comentario = typeof req.body?.comentario === 'string' ? req.body.comentario.trim() : ''
+    const autor      = typeof req.body?.autor      === 'string' ? req.body.autor.trim()      : ''
+    if (!comentario) {
+      return res.status(400).json({ error: 'validation_error', fields: { comentario: 'Comentário é obrigatório' } })
+    }
+    if (comentario.length > 2000) {
+      return res.status(400).json({ error: 'validation_error', fields: { comentario: 'Máximo 2000 caracteres' } })
+    }
+    const check = await query(`SELECT 1 FROM entradas_fiscais WHERE id = $1`, [id])
+    if (!check.rowCount) return res.status(404).json({ error: 'not_found' })
+
+    const { rows } = await query(
+      `INSERT INTO justificativas_entrada_fiscal (entrada_fiscal_id, comentario, autor)
+       VALUES ($1, $2, $3)
+       RETURNING id, entrada_fiscal_id, comentario, autor, created_at`,
+      [id, comentario, autor || null]
+    )
+    const r = rows[0]
+    res.status(201).json({
+      id: r.id,
+      entradaFiscalId: r.entrada_fiscal_id,
+      comentario: r.comentario,
+      autor: r.autor,
+      createdAt: r.created_at
+    })
+  } catch (err) { next(err) }
+})
+
+router.delete('/:id/justificativas/:justId', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id)
+    const justId = Number(req.params.justId)
+    if (!Number.isInteger(id) || id <= 0 || !Number.isInteger(justId) || justId <= 0) {
+      return res.status(400).json({ error: 'invalid_id' })
+    }
+    const { rowCount } = await query(
+      `DELETE FROM justificativas_entrada_fiscal
+        WHERE id = $1 AND entrada_fiscal_id = $2`,
+      [justId, id]
+    )
+    if (!rowCount) return res.status(404).json({ error: 'not_found' })
+    res.status(204).end()
+  } catch (err) { next(err) }
+})
+
 // GET ONE
 router.get('/:id', async (req, res, next) => {
   try {
