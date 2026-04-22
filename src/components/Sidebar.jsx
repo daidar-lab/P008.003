@@ -7,6 +7,7 @@ import {
 
 const primary = [
   { icon: Home,    label: 'Home',             route: 'overview' },
+  { icon: Home,    label: 'Home 2',           route: 'overview-2' },
   { icon: Receipt, label: 'Entradas Fiscais', route: 'entradas-fiscais' }
 ]
 
