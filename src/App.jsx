@@ -7,8 +7,21 @@ import Performance from './components/Performance.jsx'
 import SpentAmount from './components/SpentAmount.jsx'
 import Spending from './components/Spending.jsx'
 import Revenue from './components/Revenue.jsx'
+import { useApi } from './api.js'
+
+const STAT_FALLBACK = [
+  { key: 'total_views', title: 'Total views', dotColor: '#e5484d', value: 253056, deltaPercent: 12, trend: 'down', period: 'since last month' },
+  { key: 'customers',   title: 'Customers',   dotColor: '#d946ef', value: 12375,  deltaPercent: 7,  trend: 'down', period: 'since last month' },
+  { key: 'orders',      title: 'Orders',      dotColor: '#19b26b', value: 23845,  deltaPercent: 18, trend: 'down', period: 'since last month' }
+]
+
+function formatValue(n) {
+  return new Intl.NumberFormat('en-US').format(n)
+}
 
 export default function App() {
+  const { data: stats } = useApi('/stats', { fallback: STAT_FALLBACK })
+
   return (
     <div className="app">
       <Sidebar />
@@ -17,27 +30,16 @@ export default function App() {
         <TopBar />
 
         <section className="grid row-1">
-          <StatCard
-            title="Total views"
-            dotColor="#e5484d"
-            value="253,056"
-            delta="12% since last month"
-            trend="down"
-          />
-          <StatCard
-            title="Customers"
-            dotColor="#d946ef"
-            value="12,375"
-            delta="7% since last month"
-            trend="down"
-          />
-          <StatCard
-            title="Orders"
-            dotColor="#19b26b"
-            value="23,845"
-            delta="18% since last month"
-            trend="down"
-          />
+          {stats.map((s) => (
+            <StatCard
+              key={s.key}
+              title={s.title}
+              dotColor={s.dotColor}
+              value={formatValue(s.value)}
+              delta={`${s.deltaPercent}% ${s.period}`}
+              trend={s.trend}
+            />
+          ))}
           <VentoAI />
         </section>
 

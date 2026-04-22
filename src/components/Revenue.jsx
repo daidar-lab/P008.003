@@ -1,13 +1,20 @@
 import { ArrowUpRight } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
+import { useApi } from '../api.js'
 
-const data = [
-  { name: 'Online',  value: 45, color: '#2f6bff' },
-  { name: 'Retail',  value: 30, color: '#19b26b' },
-  { name: 'Wholesale', value: 25, color: '#f5c518' }
-]
+const FALLBACK = {
+  totalLabel: '$483K',
+  channels: [
+    { name: 'Online',    value: 45, color: '#2f6bff' },
+    { name: 'Retail',    value: 30, color: '#19b26b' },
+    { name: 'Wholesale', value: 25, color: '#f5c518' }
+  ]
+}
 
 export default function Revenue() {
+  const { data } = useApi('/revenue', { fallback: FALLBACK })
+  const channels = data?.channels ?? FALLBACK.channels
+
   return (
     <div className="card">
       <div className="card-head">
@@ -21,7 +28,7 @@ export default function Revenue() {
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={data}
+              data={channels}
               cx="50%"
               cy="75%"
               startAngle={200}
@@ -33,20 +40,20 @@ export default function Revenue() {
               dataKey="value"
               stroke="none"
             >
-              {data.map((d, i) => (
+              {channels.map((d, i) => (
                 <Cell key={i} fill={d.color} />
               ))}
             </Pie>
           </PieChart>
         </ResponsiveContainer>
         <div className="gauge-center">
-          <div className="gauge-value">$483K</div>
+          <div className="gauge-value">{data?.totalLabel ?? FALLBACK.totalLabel}</div>
           <div className="gauge-label">Total Revenue</div>
         </div>
       </div>
 
       <div className="revenue-legend">
-        {data.map((d) => (
+        {channels.map((d) => (
           <span key={d.name} className="legend-item">
             <span className="dot" style={{ background: d.color }} />
             <span>{d.name}</span>
