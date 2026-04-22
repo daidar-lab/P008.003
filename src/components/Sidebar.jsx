@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   Home, MoreVertical,
   FolderOpen, ChevronDown, ChevronRight,
-  ArrowRightLeft, ShoppingBag, Receipt
+  ArrowRightLeft, ShoppingBag, Receipt, Building2
 } from 'lucide-react'
 
 const primary = [
@@ -13,7 +13,8 @@ const primary = [
 
 const cadastros = [
   { icon: ArrowRightLeft, label: 'Tipo de Entrada e Saída', route: 'tipos-entrada-saida' },
-  { icon: ShoppingBag,    label: 'Produtos',                route: 'produtos' }
+  { icon: ShoppingBag,    label: 'Produtos',                route: 'produtos' },
+  { icon: Building2,      label: 'Filiais',                 route: 'filiais' }
 ]
 
 export default function Sidebar({ route, onNavigate }) {

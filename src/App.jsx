@@ -5,10 +5,12 @@ import Overview2 from './pages/Overview2.jsx'
 import TiposEntradaSaida from './pages/TiposEntradaSaida.jsx'
 import Produtos from './pages/Produtos.jsx'
 import EntradasFiscais from './pages/EntradasFiscais.jsx'
+import Filiais from './pages/Filiais.jsx'
 
 const ROUTES = {
   'tipos-entrada-saida': TiposEntradaSaida,
   'produtos': Produtos,
+  'filiais': Filiais,
   'entradas-fiscais': EntradasFiscais,
   'overview': Overview,
   'overview-2': Overview2

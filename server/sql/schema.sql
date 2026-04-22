@@ -83,6 +83,19 @@ CREATE TABLE IF NOT EXISTS produtos (
 CREATE INDEX IF NOT EXISTS produtos_descricao_idx
   ON produtos (descricao);
 
+-- Cadastros: filiais
+CREATE TABLE IF NOT EXISTS filiais (
+  id          SERIAL PRIMARY KEY,
+  codigo      VARCHAR(50)  NOT NULL UNIQUE,
+  descricao   VARCHAR(250) NOT NULL,
+  abreviatura VARCHAR(20)  NOT NULL,
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS filiais_descricao_idx
+  ON filiais (descricao);
+
 -- Cadastros: entradas fiscais (itens de NF de entrada)
 CREATE TABLE IF NOT EXISTS entradas_fiscais (
   id                          SERIAL PRIMARY KEY,

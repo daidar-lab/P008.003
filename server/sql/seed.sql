@@ -2,8 +2,15 @@
 
 TRUNCATE stats, balance_buckets, performance_weeks, spent_shares,
          spending_categories, revenue_channels, revenue_totals,
-         tipos_entrada_saida, produtos, entradas_fiscais
+         tipos_entrada_saida, produtos, entradas_fiscais, filiais
 RESTART IDENTITY;
+
+INSERT INTO filiais (codigo, descricao, abreviatura) VALUES
+  ('001', 'Filial São Paulo - Matriz',  'SP-MTZ'),
+  ('002', 'Filial Rio de Janeiro',       'RJ'),
+  ('003', 'Filial Belo Horizonte',       'BH'),
+  ('004', 'Filial Porto Alegre',         'POA'),
+  ('005', 'Centro de Distribuição - SP', 'CD-SP');
 
 INSERT INTO entradas_fiscais (
   codigo_filial, item_documento_fiscal, codigo_produto, descricao_produto,
