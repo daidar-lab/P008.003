@@ -378,11 +378,28 @@ async function computeNfVsNegociado(op, { from, to, maxPercent, minPercent }) {
     : '(valor_negociado_compras - valor_nota_fiscal)'
 
   const params = []
-  const where = []
-  if (from) { params.push(from); where.push(`data_emissao_nota_fiscal >= $${params.length}`) }
-  if (to)   { params.push(to);   where.push(`data_emissao_nota_fiscal <= $${params.length}`) }
-  if (where.length) where.push(`data_emissao_nota_fiscal IS NOT NULL`)
-  const whereSQL = where.length ? `WHERE ${where.join(' AND ')}` : ''
+  // Filtro fixo: somente registros cujo codigo_tipo_entrada existe em
+  // tipos_entrada_saida.codigo com considera_analise = TRUE.
+  const where = [
+    `codigo_tipo_entrada IN (
+       SELECT codigo FROM tipos_entrada_saida WHERE considera_analise = TRUE
+     )`
+  ]
+  let hasPeriodFilter = false
+  if (from) {
+    params.push(from)
+    where.push(`data_emissao_nota_fiscal >= $${params.length}`)
+    hasPeriodFilter = true
+  }
+  if (to) {
+    params.push(to)
+    where.push(`data_emissao_nota_fiscal <= $${params.length}`)
+    hasPeriodFilter = true
+  }
+  if (hasPeriodFilter) {
+    where.push(`data_emissao_nota_fiscal IS NOT NULL`)
+  }
+  const whereSQL = `WHERE ${where.join(' AND ')}`
 
   // Predicado de match (count/valorizacao) — adiciona teto e/ou piso
   let matchPred = `valor_nota_fiscal IS NOT NULL
