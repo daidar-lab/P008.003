@@ -358,8 +358,22 @@ router.post('/import', (req, res, next) => {
 })
 
 // METRICS: quantidade de itens onde valor_nota_fiscal < valor_negociado_compras
-router.get('/metrics/nf-menor-que-negociado', async (_req, res, next) => {
+// Aceita filtro de período opcional: ?from=YYYY-MM-DD&to=YYYY-MM-DD
+// Quando algum dos dois é informado, filtra por data_emissao_nota_fiscal.
+router.get('/metrics/nf-menor-que-negociado', async (req, res, next) => {
   try {
+    const ISO = /^\d{4}-\d{2}-\d{2}$/
+    const from = typeof req.query.from === 'string' && ISO.test(req.query.from) ? req.query.from : null
+    const to   = typeof req.query.to   === 'string' && ISO.test(req.query.to)   ? req.query.to   : null
+
+    const params = []
+    const where = []
+    if (from) { params.push(from); where.push(`data_emissao_nota_fiscal >= $${params.length}`) }
+    if (to)   { params.push(to);   where.push(`data_emissao_nota_fiscal <= $${params.length}`) }
+    // Quando um filtro de período está ativo, linhas sem data são ignoradas.
+    if (where.length) where.push(`data_emissao_nota_fiscal IS NOT NULL`)
+    const whereSQL = where.length ? `WHERE ${where.join(' AND ')}` : ''
+
     const { rows } = await query(
       `SELECT
          COUNT(*) FILTER (
@@ -387,7 +401,9 @@ router.get('/metrics/nf-menor-que-negociado', async (_req, res, next) => {
            ),
            0
          )::numeric AS valor_total
-       FROM entradas_fiscais`
+       FROM entradas_fiscais
+       ${whereSQL}`,
+      params
     )
     const count = rows[0].count
     const total = rows[0].total
@@ -401,7 +417,9 @@ router.get('/metrics/nf-menor-que-negociado', async (_req, res, next) => {
       percent,
       valorizacao,
       valorTotal,
-      percentValorizacao
+      percentValorizacao,
+      from,
+      to
     })
   } catch (err) { next(err) }
 })

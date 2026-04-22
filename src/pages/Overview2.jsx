@@ -1,4 +1,5 @@
-import { ArrowUpRight, TrendingDown } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { ArrowUpRight, TrendingDown, CalendarRange } from 'lucide-react'
 import TopBar from '../components/TopBar.jsx'
 import StatCard from '../components/StatCard.jsx'
 import VentoAI from '../components/VentoAI.jsx'
@@ -22,11 +23,45 @@ const fmtPct = (n) => new Intl.NumberFormat('pt-BR', {
   minimumFractionDigits: 1, maximumFractionDigits: 2
 }).format(n)
 
+function toISODate(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+function monthRange(offsetFromCurrent = 0) {
+  const now = new Date()
+  const first = new Date(now.getFullYear(), now.getMonth() + offsetFromCurrent, 1)
+  const last  = new Date(first.getFullYear(), first.getMonth() + 1, 0)
+  return { from: toISODate(first), to: toISODate(last) }
+}
+function fmtRangeLabel(range) {
+  if (!range?.from || !range?.to) return null
+  const fmt = (s) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s)
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : s
+  }
+  return `${fmt(range.from)} – ${fmt(range.to)}`
+}
+
 export default function Overview2() {
+  const [period, setPeriod] = useState('This month')
+  const [customRange, setCustomRange] = useState(() => monthRange(0))
+
+  const activeRange = useMemo(() => {
+    if (period === 'This month') return monthRange(0)
+    if (period === 'Last month') return monthRange(-1)
+    return customRange
+  }, [period, customRange])
+
+  const validRange = activeRange.from && activeRange.to && activeRange.from <= activeRange.to
+  const queryStr = validRange ? `?from=${activeRange.from}&to=${activeRange.to}` : ''
+
   const { data: stats } = useApi('/stats', { fallback: STAT_FALLBACK })
-  const { data: nf } = useApi('/entradas-fiscais/metrics/nf-menor-que-negociado', {
-    fallback: { count: 0, total: 0, percent: 0, valorizacao: 0, valorTotal: 0, percentValorizacao: 0 }
-  })
+  const { data: nf, loading: loadingNf } = useApi(
+    `/entradas-fiscais/metrics/nf-menor-que-negociado${queryStr}`,
+    { fallback: { count: 0, total: 0, percent: 0, valorizacao: 0, valorTotal: 0, percentValorizacao: 0 } }
+  )
 
   const otherStats = (stats || []).filter((s) => s.key !== 'total_views').slice(0, 2)
 
@@ -36,10 +71,16 @@ export default function Overview2() {
   const count              = Number(nf?.count ?? 0)
   const total              = Number(nf?.total ?? 0)
   const percentItens       = Number(nf?.percent ?? 0)
+  const rangeLabel = fmtRangeLabel(activeRange)
 
   return (
     <>
-      <TopBar />
+      <TopBar
+        period={period}
+        onPeriodChange={setPeriod}
+        customRange={customRange}
+        onCustomRangeChange={setCustomRange}
+      />
 
       <section className="grid row-1">
         <div className="card nf-card">
@@ -52,6 +93,14 @@ export default function Overview2() {
               <ArrowUpRight size={14} />
             </button>
           </div>
+
+          {rangeLabel && (
+            <div className="nf-period">
+              <CalendarRange size={12} />
+              <span>{rangeLabel}</span>
+              {loadingNf && <span className="nf-loading">carregando…</span>}
+            </div>
+          )}
 
           <div className="nf-primary">
             <span className="nf-sublabel">Valorização</span>

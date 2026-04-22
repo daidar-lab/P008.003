@@ -967,3 +967,39 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   font-weight: 500;
   font-size: 12px;
 }
+
+/* TopBar: seletor de intervalo customizado */
+.custom-range {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--panel);
+  padding: 4px 6px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  font-size: 12px;
+}
+.custom-range input[type="date"] {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 8px;
+  background: var(--panel-2);
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text);
+  outline: none;
+}
+.custom-range input[type="date"]:focus {
+  border-color: var(--accent);
+  background: white;
+  box-shadow: 0 0 0 2px rgba(47, 107, 255, 0.15);
+}
+.custom-range-sep { color: var(--text-3); font-weight: 500; padding: 0 2px; }
+
+.nf-period {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; color: var(--text-3);
+  margin-bottom: 6px;
+}
+.nf-period .nf-loading {
+  margin-left: auto; color: var(--accent); font-weight: 500;
+  font-style: italic;
+}
