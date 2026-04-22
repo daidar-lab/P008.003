@@ -73,7 +73,7 @@ export default function Overview2() {
       </section>
 
       <section className="grid row-2">
-        <TotalBalance />
+        <TotalBalance range={activeRange} />
         <Performance />
       </section>
 

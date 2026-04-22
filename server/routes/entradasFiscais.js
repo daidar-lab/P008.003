@@ -486,6 +486,62 @@ router.get('/metrics/nf-maior-que-negociado', async (req, res, next) => {
   catch (err) { next(err) }
 })
 
+// METRICS: série diária de variação — savings (NF<Neg) e overspend (NF>Neg)
+// Respeita o mesmo filtro fixo de considera_analise + período opcional.
+router.get('/metrics/variacao-diaria', async (req, res, next) => {
+  try {
+    const { from, to } = readRange(req)
+    const params = []
+    const where = [
+      `codigo_tipo_entrada IN (SELECT codigo FROM tipos_entrada_saida WHERE considera_analise = TRUE)`,
+      `data_emissao_nota_fiscal IS NOT NULL`,
+      `valor_nota_fiscal IS NOT NULL`,
+      `valor_negociado_compras IS NOT NULL`,
+      `quantidade_escriturada IS NOT NULL`
+    ]
+    if (from) { params.push(from); where.push(`data_emissao_nota_fiscal >= $${params.length}`) }
+    if (to)   { params.push(to);   where.push(`data_emissao_nota_fiscal <= $${params.length}`) }
+
+    const { rows } = await query(
+      `SELECT
+         data_emissao_nota_fiscal AS date,
+         COALESCE(SUM(CASE
+           WHEN valor_nota_fiscal < valor_negociado_compras
+           THEN quantidade_escriturada * (valor_negociado_compras - valor_nota_fiscal)
+           ELSE 0 END), 0)::numeric AS savings,
+         COALESCE(SUM(CASE
+           WHEN valor_nota_fiscal > valor_negociado_compras
+           THEN quantidade_escriturada * (valor_nota_fiscal - valor_negociado_compras)
+           ELSE 0 END), 0)::numeric AS overspend,
+         COUNT(*)::int AS items
+       FROM entradas_fiscais
+       WHERE ${where.join(' AND ')}
+       GROUP BY data_emissao_nota_fiscal
+       ORDER BY data_emissao_nota_fiscal ASC`,
+      params
+    )
+
+    const series = rows.map((r) => {
+      const savings = Number(r.savings)
+      const overspend = Number(r.overspend)
+      const iso = r.date instanceof Date
+        ? r.date.toISOString().slice(0, 10)
+        : String(r.date).slice(0, 10)
+      return { date: iso, savings, overspend, net: savings - overspend, items: r.items }
+    })
+    res.json({
+      from: from ?? null, to: to ?? null,
+      series,
+      totals: {
+        savings:   series.reduce((s, d) => s + d.savings, 0),
+        overspend: series.reduce((s, d) => s + d.overspend, 0),
+        net:       series.reduce((s, d) => s + d.net, 0),
+        days:      series.length
+      }
+    })
+  } catch (err) { next(err) }
+})
+
 // GET ONE
 router.get('/:id', async (req, res, next) => {
   try {
