@@ -96,6 +96,21 @@ CREATE TABLE IF NOT EXISTS filiais (
 CREATE INDEX IF NOT EXISTS filiais_descricao_idx
   ON filiais (descricao);
 
+-- Cadastros: grupos de produtos (palavra-chave para agrupamento)
+CREATE TABLE IF NOT EXISTS grupos_produtos (
+  id            SERIAL PRIMARY KEY,
+  codigo        VARCHAR(50)  NOT NULL UNIQUE,
+  descricao     VARCHAR(250) NOT NULL,
+  palavra_chave VARCHAR(100) NOT NULL,
+  created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS grupos_produtos_descricao_idx
+  ON grupos_produtos (descricao);
+CREATE INDEX IF NOT EXISTS grupos_produtos_palavra_chave_idx
+  ON grupos_produtos (palavra_chave);
+
 -- Cadastros: entradas fiscais (itens de NF de entrada)
 CREATE TABLE IF NOT EXISTS entradas_fiscais (
   id                          SERIAL PRIMARY KEY,

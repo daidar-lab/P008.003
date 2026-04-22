@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   LayoutDashboard, MoreVertical,
   FolderOpen, ChevronDown, ChevronRight,
-  ArrowRightLeft, ShoppingBag, Receipt, Building2
+  ArrowRightLeft, ShoppingBag, Receipt, Building2, Layers
 } from 'lucide-react'
 
 const primary = [
@@ -13,6 +13,7 @@ const primary = [
 const cadastros = [
   { icon: ArrowRightLeft, label: 'Tipo de Entrada e Saída', route: 'tipos-entrada-saida' },
   { icon: ShoppingBag,    label: 'Produtos',                route: 'produtos' },
+  { icon: Layers,         label: 'Grupo de Produtos',       route: 'grupos-produtos' },
   { icon: Building2,      label: 'Filiais',                 route: 'filiais' }
 ]
 

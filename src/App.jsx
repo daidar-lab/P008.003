@@ -5,12 +5,14 @@ import TiposEntradaSaida from './pages/TiposEntradaSaida.jsx'
 import Produtos from './pages/Produtos.jsx'
 import EntradasFiscais from './pages/EntradasFiscais.jsx'
 import Filiais from './pages/Filiais.jsx'
+import GruposProdutos from './pages/GruposProdutos.jsx'
 
 const ROUTES = {
   'dashboard':           Dashboard,
   'entradas-fiscais':    EntradasFiscais,
   'tipos-entrada-saida': TiposEntradaSaida,
   'produtos':            Produtos,
+  'grupos-produtos':     GruposProdutos,
   'filiais':             Filiais
 }
 

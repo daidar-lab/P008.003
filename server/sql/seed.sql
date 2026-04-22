@@ -2,8 +2,16 @@
 
 TRUNCATE stats, balance_buckets, performance_weeks, spent_shares,
          spending_categories, revenue_channels, revenue_totals,
-         tipos_entrada_saida, produtos, entradas_fiscais, filiais
+         tipos_entrada_saida, produtos, entradas_fiscais, filiais,
+         grupos_produtos
 RESTART IDENTITY;
+
+INSERT INTO grupos_produtos (codigo, descricao, palavra_chave) VALUES
+  ('GRP-001', 'Vestuário - Básicos',        'camiseta'),
+  ('GRP-002', 'Vestuário - Denim',           'jeans'),
+  ('GRP-003', 'Calçados',                    'tenis'),
+  ('GRP-004', 'Vestuário - Proteção',        'jaqueta'),
+  ('GRP-005', 'Acessórios',                  'acessorio');
 
 INSERT INTO filiais (codigo, descricao, abreviatura) VALUES
   ('001', 'Filial São Paulo - Matriz',  'SP-MTZ'),
