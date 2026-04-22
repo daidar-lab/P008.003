@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Plus, Pencil, Trash2, Search, RefreshCw, Check, X } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, RefreshCw, Check, X, Upload } from 'lucide-react'
 import { apiGet, apiSend } from '../api.js'
 import TipoForm from './TipoForm.jsx'
+import ImportTiposModal from './ImportTiposModal.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 
 const ENDPOINT = '/tipos-entrada-saida'
@@ -13,6 +14,7 @@ export default function TiposEntradaSaida() {
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState(null)  // null | {} (novo) | registro
   const [deleting, setDeleting] = useState(null)
+  const [importing, setImporting] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   const load = useCallback(async () => {
@@ -81,6 +83,10 @@ export default function TiposEntradaSaida() {
         <div className="actions">
           <button className="btn btn-ghost" onClick={load} aria-label="Recarregar">
             <RefreshCw size={14} />
+          </button>
+          <button className="btn" onClick={() => setImporting(true)}>
+            <Upload size={14} />
+            <span>Importar Excel</span>
           </button>
           <button className="btn btn-primary" onClick={() => setEditing({})}>
             <Plus size={15} strokeWidth={2.2} />
@@ -169,6 +175,13 @@ export default function TiposEntradaSaida() {
           submitting={submitting}
           onCancel={() => setEditing(null)}
           onSave={handleSave}
+        />
+      )}
+
+      {importing && (
+        <ImportTiposModal
+          onCancel={() => setImporting(false)}
+          onImported={load}
         />
       )}
 
