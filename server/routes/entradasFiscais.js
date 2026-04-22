@@ -361,13 +361,18 @@ router.post('/import', (req, res, next) => {
 router.get('/metrics/nf-menor-que-negociado', async (_req, res, next) => {
   try {
     const { rows } = await query(
-      `SELECT COUNT(*)::int AS count
-       FROM entradas_fiscais
-       WHERE valor_nota_fiscal IS NOT NULL
-         AND valor_negociado_compras IS NOT NULL
-         AND valor_nota_fiscal < valor_negociado_compras`
+      `SELECT
+         COUNT(*) FILTER (
+           WHERE valor_nota_fiscal IS NOT NULL
+             AND valor_negociado_compras IS NOT NULL
+             AND valor_nota_fiscal < valor_negociado_compras
+         )::int AS count,
+         COUNT(*)::int AS total
+       FROM entradas_fiscais`
     )
-    res.json({ count: rows[0].count })
+    const { count, total } = rows[0]
+    const percent = total > 0 ? (count / total) * 100 : 0
+    res.json({ count, total, percent })
   } catch (err) { next(err) }
 })
 
