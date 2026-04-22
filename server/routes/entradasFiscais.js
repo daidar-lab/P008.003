@@ -486,11 +486,25 @@ router.get('/metrics/nf-maior-que-negociado', async (req, res, next) => {
   catch (err) { next(err) }
 })
 
-// METRICS: série diária de variação — savings (NF<Neg) e overspend (NF>Neg)
-// Respeita o mesmo filtro fixo de considera_analise + período opcional.
+// METRICS: série de variação — savings (NF<Neg) e overspend (NF>Neg)
+// Granularidade automática: se o intervalo for maior que 45 dias, agrupa por
+// mês; caso contrário, agrupa por dia. Respeita considera_analise + from/to.
 router.get('/metrics/variacao-diaria', async (req, res, next) => {
   try {
     const { from, to } = readRange(req)
+
+    // Decide granularidade pelo comprimento do intervalo
+    let granularity = 'day'
+    if (from && to) {
+      const d1 = new Date(`${from}T00:00:00Z`)
+      const d2 = new Date(`${to}T00:00:00Z`)
+      const diffDays = Math.round((d2 - d1) / 86_400_000)
+      if (diffDays > 45) granularity = 'month'
+    }
+    const dateExpr = granularity === 'month'
+      ? `DATE_TRUNC('month', data_emissao_nota_fiscal)::date`
+      : `data_emissao_nota_fiscal`
+
     const params = []
     const where = [
       `codigo_tipo_entrada IN (SELECT codigo FROM tipos_entrada_saida WHERE considera_analise = TRUE)`,
@@ -504,7 +518,7 @@ router.get('/metrics/variacao-diaria', async (req, res, next) => {
 
     const { rows } = await query(
       `SELECT
-         data_emissao_nota_fiscal AS date,
+         ${dateExpr} AS date,
          COALESCE(SUM(CASE
            WHEN valor_nota_fiscal < valor_negociado_compras
            THEN quantidade_escriturada * (valor_negociado_compras - valor_nota_fiscal)
@@ -516,8 +530,8 @@ router.get('/metrics/variacao-diaria', async (req, res, next) => {
          COUNT(*)::int AS items
        FROM entradas_fiscais
        WHERE ${where.join(' AND ')}
-       GROUP BY data_emissao_nota_fiscal
-       ORDER BY data_emissao_nota_fiscal ASC`,
+       GROUP BY ${dateExpr}
+       ORDER BY ${dateExpr} ASC`,
       params
     )
 
@@ -531,12 +545,13 @@ router.get('/metrics/variacao-diaria', async (req, res, next) => {
     })
     res.json({
       from: from ?? null, to: to ?? null,
+      granularity,
       series,
       totals: {
         savings:   series.reduce((s, d) => s + d.savings, 0),
         overspend: series.reduce((s, d) => s + d.overspend, 0),
         net:       series.reduce((s, d) => s + d.net, 0),
-        days:      series.length
+        buckets:   series.length
       }
     })
   } catch (err) { next(err) }

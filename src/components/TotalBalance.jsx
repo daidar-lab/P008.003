@@ -28,33 +28,51 @@ const fmtDayLong = (iso) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '')
   return m ? `${m[3]}/${m[2]}/${m[1]}` : iso
 }
+const MONTH_NAMES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']
+const MONTH_FULL  = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+const fmtMonthShort = (iso) => {
+  const m = /^(\d{4})-(\d{2})-\d{2}/.exec(iso || '')
+  if (!m) return iso
+  return `${MONTH_NAMES[+m[2] - 1]}/${m[1].slice(2)}`
+}
+const fmtMonthLong = (iso) => {
+  const m = /^(\d{4})-(\d{2})-\d{2}/.exec(iso || '')
+  if (!m) return iso
+  return `${MONTH_FULL[+m[2] - 1]} de ${m[1]}`
+}
 
-function VarTooltip({ active, payload, label }) {
-  if (!active || !payload?.length) return null
-  const byKey = Object.fromEntries(payload.map((p) => [p.dataKey, p.value]))
-  const savings = Number(byKey.savings || 0)
-  const overspend = Number(byKey.overspend || 0)
-  const net = savings - overspend
-  return (
-    <div className="perf-tooltip" style={{ minWidth: 180 }}>
-      <div className="sub">{fmtDayLong(label)}</div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-        <span>NF &lt; Neg</span><span style={{ color: GREEN }}>{fmtBRL(savings)}</span>
+function makeVarTooltip(longFmt) {
+  return function VarTooltip({ active, payload, label }) {
+    if (!active || !payload?.length) return null
+    const byKey = Object.fromEntries(payload.map((p) => [p.dataKey, p.value]))
+    const savings = Number(byKey.savings || 0)
+    const overspend = Number(byKey.overspend || 0)
+    const net = savings - overspend
+    return (
+      <div className="perf-tooltip" style={{ minWidth: 180 }}>
+        <div className="sub">{longFmt(label)}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+          <span>NF &lt; Neg</span><span style={{ color: GREEN }}>{fmtBRL(savings)}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+          <span>NF &gt; Neg</span><span style={{ color: RED }}>{fmtBRL(overspend)}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10,
+                      marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+          <span>Líquido</span><strong>{fmtBRL(net)}</strong>
+        </div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-        <span>NF &gt; Neg</span><span style={{ color: RED }}>{fmtBRL(overspend)}</span>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10,
-                    marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.2)' }}>
-        <span>Líquido</span><strong>{fmtBRL(net)}</strong>
-      </div>
-    </div>
-  )
+    )
+  }
 }
 
 const labelFmt = (v) => (v && v > 0) ? fmtBRLCompact(v) : ''
 
-function VariationChart({ series, showLabels = false, yAxisWidth = 60 }) {
+function VariationChart({ series, showLabels = false, yAxisWidth = 60, granularity = 'day' }) {
+  const shortFmt = granularity === 'month' ? fmtMonthShort : fmtDayShort
+  const longFmt  = granularity === 'month' ? fmtMonthLong  : fmtDayLong
+  const Tip = makeVarTooltip(longFmt)
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
@@ -65,7 +83,7 @@ function VariationChart({ series, showLabels = false, yAxisWidth = 60 }) {
         <CartesianGrid stroke="#eef0f3" strokeDasharray="3 4" vertical={false} />
         <XAxis
           dataKey="date"
-          tickFormatter={fmtDayShort}
+          tickFormatter={shortFmt}
           axisLine={false}
           tickLine={false}
           tick={{ fontSize: showLabels ? 12 : 10, fill: '#9aa1ac' }}
@@ -79,7 +97,7 @@ function VariationChart({ series, showLabels = false, yAxisWidth = 60 }) {
           tickFormatter={fmtBRLCompact}
           width={yAxisWidth}
         />
-        <Tooltip content={<VarTooltip />} cursor={{ fill: 'rgba(47, 107, 255, 0.06)' }} />
+        <Tooltip content={<Tip />} cursor={{ fill: 'rgba(47, 107, 255, 0.06)' }} />
         <Bar dataKey="savings" fill={GREEN} radius={[3, 3, 0, 0]}>
           {showLabels && (
             <LabelList
@@ -110,11 +128,15 @@ export default function TotalBalance({ range }) {
     ? `?from=${range.from}&to=${range.to}`
     : ''
   const { data } = useApi(`/entradas-fiscais/metrics/variacao-diaria${qs}`, {
-    fallback: { series: [], totals: { savings: 0, overspend: 0, net: 0, days: 0 } }
+    fallback: { series: [], totals: { savings: 0, overspend: 0, net: 0, buckets: 0 }, granularity: 'day' }
   })
 
   const series = Array.isArray(data?.series) ? data.series : []
-  const totals = data?.totals ?? { savings: 0, overspend: 0, net: 0, days: 0 }
+  const totals = data?.totals ?? { savings: 0, overspend: 0, net: 0, buckets: 0 }
+  const granularity = data?.granularity === 'month' ? 'month' : 'day'
+  const unitLabel = granularity === 'month' ? 'mês' : 'dia'
+  const unitLabelPlural = granularity === 'month' ? 'meses' : 'dias'
+  const bucketsCount = totals.buckets ?? totals.days ?? series.length
   const netPositive = totals.net >= 0
   const rangeLabel = range?.from && range?.to
     ? `${fmtDayShort(range.from)} — ${fmtDayShort(range.to)}`
@@ -153,14 +175,15 @@ export default function TotalBalance({ range }) {
         </div>
 
         <div style={{ height: 180, marginTop: 10 }}>
-          <VariationChart series={series} />
+          <VariationChart series={series} granularity={granularity} />
         </div>
 
         <div className="legend">
           <span className="legend-item"><span className="dot" style={{ background: GREEN }} />NF &lt; Negociado</span>
           <span className="legend-item"><span className="dot" style={{ background: RED }} />NF &gt; Negociado</span>
           <span className="legend-item" style={{ marginLeft: 'auto', color: 'var(--text-3)' }}>
-            {totals.days} dia{totals.days === 1 ? '' : 's'}
+            {bucketsCount} {bucketsCount === 1 ? unitLabel : unitLabelPlural}
+            {granularity === 'month' && <span style={{ marginLeft: 4, opacity: 0.7 }}>(mensal)</span>}
           </span>
         </div>
       </div>
@@ -173,10 +196,10 @@ export default function TotalBalance({ range }) {
           <div className="modal modal-chart" role="dialog" aria-modal="true">
             <div className="modal-head chart-modal-head">
               <div>
-                <h2>Total Balance · Variação diária</h2>
+                <h2>Total Balance · Variação {granularity === 'month' ? 'mensal' : 'diária'}</h2>
                 <p>
                   NF &lt; Negociado vs. NF &gt; Negociado · {rangeLabel} ·
-                  {' '}{totals.days} dia{totals.days === 1 ? '' : 's'}
+                  {' '}{bucketsCount} {bucketsCount === 1 ? unitLabel : unitLabelPlural}
                 </p>
               </div>
               <div className="chart-modal-actions">
@@ -198,7 +221,7 @@ export default function TotalBalance({ range }) {
             </div>
 
             <div className="modal-body chart-modal-body">
-              <VariationChart series={series} showLabels yAxisWidth={80} />
+              <VariationChart series={series} showLabels yAxisWidth={80} granularity={granularity} />
             </div>
 
             <div className="modal-foot chart-modal-foot">
