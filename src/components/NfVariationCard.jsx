@@ -31,7 +31,8 @@ export default function NfVariationCard({
   range,
   valorizacaoLabel = 'Valorização',
   trend = 'down',
-  maxPercent
+  maxPercent,
+  minPercent
 }) {
   const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown
   const validRange = range?.from && range?.to && range.from <= range.to
@@ -42,6 +43,9 @@ export default function NfVariationCard({
   }
   if (typeof maxPercent === 'number' && Number.isFinite(maxPercent) && maxPercent > 0) {
     qs.push(`maxPercent=${encodeURIComponent(maxPercent)}`)
+  }
+  if (typeof minPercent === 'number' && Number.isFinite(minPercent) && minPercent > 0) {
+    qs.push(`minPercent=${encodeURIComponent(minPercent)}`)
   }
   const query = qs.length ? `?${qs.join('&')}` : ''
   const { data: nf, loading } = useApi(`${endpoint}${query}`, {

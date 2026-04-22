@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import TopBar from '../components/TopBar.jsx'
-import VentoAI from '../components/VentoAI.jsx'
 import TotalBalance from '../components/TotalBalance.jsx'
 import Performance from '../components/Performance.jsx'
 import SpentAmount from '../components/SpentAmount.jsx'
@@ -40,7 +39,7 @@ export default function Overview2() {
         onCustomRangeChange={setCustomRange}
       />
 
-      <section className="grid row-1">
+      <section className="grid row-nf">
         <NfVariationCard
           endpoint="/entradas-fiscais/metrics/nf-menor-que-negociado"
           title="Itens NF < Negociado"
@@ -63,7 +62,14 @@ export default function Overview2() {
           range={activeRange}
           maxPercent={2}
         />
-        <VentoAI />
+        <NfVariationCard
+          endpoint="/entradas-fiscais/metrics/nf-maior-que-negociado"
+          title="Itens NF > Negociado (acima de 2%)"
+          dotColor="#c01d22"
+          trend="down"
+          range={activeRange}
+          minPercent={2}
+        />
       </section>
 
       <section className="grid row-2">

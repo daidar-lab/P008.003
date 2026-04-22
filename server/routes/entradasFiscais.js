@@ -363,9 +363,15 @@ router.post('/import', (req, res, next) => {
 // Quando op='gt' a valorização é qtd * (nf - neg)  — sobrepreço pago vs negociado
 // Aceita:
 //   ?from=YYYY-MM-DD&to=YYYY-MM-DD — filtro de período
-//   ?maxPercent=N                  — limita matches a diferenças de até N%
-//                                    (gt: nf <= neg*(1+N/100); lt: nf >= neg*(1-N/100))
-async function computeNfVsNegociado(op, { from, to, maxPercent }) {
+//   ?maxPercent=N                  — teto da faixa de diferença (inclusivo)
+//   ?minPercent=N                  — piso da faixa de diferença (exclusivo)
+//   Para op='gt':
+//     minPercent → nf >  neg*(1+min/100)  (diferença > min%)
+//     maxPercent → nf <= neg*(1+max/100)  (diferença <= max%)
+//   Para op='lt':
+//     minPercent → nf <  neg*(1-min/100)
+//     maxPercent → nf >= neg*(1-max/100)
+async function computeNfVsNegociado(op, { from, to, maxPercent, minPercent }) {
   const cmp = op === 'gt' ? '>' : '<'
   const diff = op === 'gt'
     ? '(valor_nota_fiscal - valor_negociado_compras)'
@@ -378,7 +384,7 @@ async function computeNfVsNegociado(op, { from, to, maxPercent }) {
   if (where.length) where.push(`data_emissao_nota_fiscal IS NOT NULL`)
   const whereSQL = where.length ? `WHERE ${where.join(' AND ')}` : ''
 
-  // Predicado de match (count/valorizacao) — adiciona teto de tolerância se maxPercent vier
+  // Predicado de match (count/valorizacao) — adiciona teto e/ou piso
   let matchPred = `valor_nota_fiscal IS NOT NULL
                    AND valor_negociado_compras IS NOT NULL
                    AND valor_nota_fiscal ${cmp} valor_negociado_compras`
@@ -386,11 +392,18 @@ async function computeNfVsNegociado(op, { from, to, maxPercent }) {
     const factor = op === 'gt' ? 1 + maxPercent / 100 : 1 - maxPercent / 100
     params.push(factor)
     const fParam = `$${params.length}`
-    if (op === 'gt') {
-      matchPred += ` AND valor_nota_fiscal <= valor_negociado_compras * ${fParam}`
-    } else {
-      matchPred += ` AND valor_nota_fiscal >= valor_negociado_compras * ${fParam}`
-    }
+    matchPred += op === 'gt'
+      ? ` AND valor_nota_fiscal <= valor_negociado_compras * ${fParam}`
+      : ` AND valor_nota_fiscal >= valor_negociado_compras * ${fParam}`
+  }
+  if (typeof minPercent === 'number' && Number.isFinite(minPercent) && minPercent > 0) {
+    const factor = op === 'gt' ? 1 + minPercent / 100 : 1 - minPercent / 100
+    params.push(factor)
+    const fParam = `$${params.length}`
+    // piso é estrito (> para gt, < para lt) — evita sobreposição com o maxPercent do outro card
+    matchPred += op === 'gt'
+      ? ` AND valor_nota_fiscal > valor_negociado_compras * ${fParam}`
+      : ` AND valor_nota_fiscal < valor_negociado_compras * ${fParam}`
   }
 
   const { rows } = await query(
@@ -425,7 +438,8 @@ async function computeNfVsNegociado(op, { from, to, maxPercent }) {
     count, total, percent,
     valorizacao, valorTotal, percentValorizacao,
     from: from ?? null, to: to ?? null,
-    maxPercent: maxPercent ?? null
+    maxPercent: maxPercent ?? null,
+    minPercent: minPercent ?? null
   }
 }
 
@@ -433,12 +447,16 @@ function readRange(req) {
   const ISO = /^\d{4}-\d{2}-\d{2}$/
   const from = typeof req.query.from === 'string' && ISO.test(req.query.from) ? req.query.from : null
   const to   = typeof req.query.to   === 'string' && ISO.test(req.query.to)   ? req.query.to   : null
-  let maxPercent
-  if (req.query.maxPercent !== undefined) {
-    const n = Number(req.query.maxPercent)
-    if (Number.isFinite(n) && n > 0 && n < 1000) maxPercent = n
+  const parsePct = (v) => {
+    if (v === undefined) return undefined
+    const n = Number(v)
+    return Number.isFinite(n) && n > 0 && n < 1000 ? n : undefined
   }
-  return { from, to, maxPercent }
+  return {
+    from, to,
+    maxPercent: parsePct(req.query.maxPercent),
+    minPercent: parsePct(req.query.minPercent)
+  }
 }
 
 router.get('/metrics/nf-menor-que-negociado', async (req, res, next) => {

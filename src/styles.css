@@ -1003,3 +1003,17 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   margin-left: auto; color: var(--accent); font-weight: 500;
   font-style: italic;
 }
+
+/* Grid dedicado da Home 2: 4 cards NF lado a lado */
+.grid.row-nf { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1400px) {
+  .grid.row-nf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .grid.row-nf { grid-template-columns: 1fr; }
+}
+
+/* No grid compacto de 4 cards, reduz tipografia para caber melhor */
+.grid.row-nf .nf-value-xl { font-size: 22px; }
+.grid.row-nf .nf-value-md { font-size: 16px; }
+.grid.row-nf .nf-grid { gap: 8px; }
