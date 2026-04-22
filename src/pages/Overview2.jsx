@@ -58,13 +58,15 @@ export default function Overview2() {
         <NfVariationCard
           endpoint="/entradas-fiscais/metrics/nf-menor-que-negociado"
           title="Itens NF < Negociado"
-          dotColor="#e5484d"
+          dotColor="#19b26b"
+          trend="up"
           range={activeRange}
         />
         <NfVariationCard
           endpoint="/entradas-fiscais/metrics/nf-maior-que-negociado"
           title="Itens NF > Negociado"
-          dotColor="#f59e0b"
+          dotColor="#e5484d"
+          trend="down"
           range={activeRange}
         />
         {orderStat && (

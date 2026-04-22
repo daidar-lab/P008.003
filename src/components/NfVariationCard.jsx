@@ -1,4 +1,4 @@
-import { ArrowUpRight, TrendingDown, CalendarRange } from 'lucide-react'
+import { ArrowUpRight, TrendingDown, TrendingUp, CalendarRange } from 'lucide-react'
 import { useApi } from '../api.js'
 
 const fmtInt = (n) => new Intl.NumberFormat('pt-BR').format(n)
@@ -29,8 +29,10 @@ export default function NfVariationCard({
   title,
   dotColor = '#e5484d',
   range,
-  valorizacaoLabel = 'Valorização'
+  valorizacaoLabel = 'Valorização',
+  trend = 'down'
 }) {
+  const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown
   const validRange = range?.from && range?.to && range.from <= range.to
   const query = validRange ? `?from=${range.from}&to=${range.to}` : ''
   const { data: nf, loading } = useApi(`${endpoint}${query}`, {
@@ -68,8 +70,8 @@ export default function NfVariationCard({
       <div className="nf-primary">
         <span className="nf-sublabel">{valorizacaoLabel}</span>
         <div className="nf-value-xl" style={{ color: dotColor }}>{fmtMoney(valorizacao)}</div>
-        <div className="stat-delta down">
-          <TrendingDown size={13} />
+        <div className={`stat-delta ${trend}`}>
+          <TrendIcon size={13} />
           <span>{fmtPct(percentValorizacao)}% do valor total</span>
         </div>
       </div>
