@@ -1110,3 +1110,43 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
+
+/* Home 2: barra de filial */
+.filial-bar {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--panel);
+  padding: 6px 10px 6px 14px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  align-self: flex-start;
+}
+.filial-bar-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--text-3);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+}
+.filial-select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: var(--panel-2);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  min-width: 280px;
+  max-width: 420px;
+  outline: none;
+}
+.filial-select:focus {
+  border-color: var(--accent);
+  background: white;
+  box-shadow: 0 0 0 2px rgba(47, 107, 255, 0.15);
+}
+.filial-clear {
+  padding: 6px 10px;
+  font-size: 12px;
+}

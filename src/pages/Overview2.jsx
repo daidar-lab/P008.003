@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Building2 } from 'lucide-react'
 import TopBar from '../components/TopBar.jsx'
 import TotalBalance from '../components/TotalBalance.jsx'
 import Performance from '../components/Performance.jsx'
@@ -6,6 +7,7 @@ import SpentAmount from '../components/SpentAmount.jsx'
 import Spending from '../components/Spending.jsx'
 import Revenue from '../components/Revenue.jsx'
 import NfVariationCard from '../components/NfVariationCard.jsx'
+import { useApi } from '../api.js'
 
 function toISODate(d) {
   const y = d.getFullYear()
@@ -61,6 +63,10 @@ export default function Overview2() {
   const [period, setPeriod] = useState('This month')
   const [customRange, setCustomRange] = useState(() => monthRange(0))
   const [selectedCard, setSelectedCard] = useState(null)
+  const [codigoFilial, setCodigoFilial] = useState('')
+
+  const { data: filiais } = useApi('/filiais', { fallback: [] })
+  const filiaisList = Array.isArray(filiais) ? filiais : []
 
   const activeRange = useMemo(() => {
     if (period === 'This month') return monthRange(0)
@@ -75,6 +81,8 @@ export default function Overview2() {
 
   const toggle = (key) => setSelectedCard((prev) => (prev === key ? null : key))
 
+  const filialCodigo = codigoFilial || null
+
   return (
     <>
       <TopBar
@@ -83,6 +91,37 @@ export default function Overview2() {
         customRange={customRange}
         onCustomRangeChange={setCustomRange}
       />
+
+      <div className="filial-bar">
+        <label htmlFor="filial-select" className="filial-bar-label">
+          <Building2 size={14} />
+          <span>Filial</span>
+        </label>
+        <select
+          id="filial-select"
+          className="filial-select"
+          value={codigoFilial}
+          onChange={(e) => setCodigoFilial(e.target.value)}
+        >
+          <option value="">Todas as filiais</option>
+          {filiaisList.map((f) => (
+            <option key={f.id} value={f.codigo}>
+              {f.codigo} — {f.abreviatura}
+              {f.descricao ? ` · ${f.descricao}` : ''}
+            </option>
+          ))}
+        </select>
+        {codigoFilial && (
+          <button
+            type="button"
+            className="btn btn-ghost filial-clear"
+            onClick={() => setCodigoFilial('')}
+            title="Limpar filtro"
+          >
+            Limpar
+          </button>
+        )}
+      </div>
 
       <section className="grid row-nf">
         {CARDS.map((c) => (
@@ -95,6 +134,7 @@ export default function Overview2() {
             range={activeRange}
             maxPercent={c.maxPercent}
             minPercent={c.minPercent}
+            codigoFilial={filialCodigo}
             selected={selectedCard === c.key}
             onClick={() => toggle(c.key)}
           />
@@ -102,7 +142,11 @@ export default function Overview2() {
       </section>
 
       <section className="grid row-2">
-        <TotalBalance range={activeRange} filter={totalBalanceFilter} />
+        <TotalBalance
+          range={activeRange}
+          filter={totalBalanceFilter}
+          codigoFilial={filialCodigo}
+        />
         <Performance />
       </section>
 

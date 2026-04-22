@@ -33,6 +33,7 @@ export default function NfVariationCard({
   trend = 'down',
   maxPercent,
   minPercent,
+  codigoFilial,
   onClick,
   selected = false
 }) {
@@ -48,6 +49,9 @@ export default function NfVariationCard({
   }
   if (typeof minPercent === 'number' && Number.isFinite(minPercent) && minPercent > 0) {
     qs.push(`minPercent=${encodeURIComponent(minPercent)}`)
+  }
+  if (codigoFilial) {
+    qs.push(`codigoFilial=${encodeURIComponent(codigoFilial)}`)
   }
   const query = qs.length ? `?${qs.join('&')}` : ''
   const { data: nf, loading } = useApi(`${endpoint}${query}`, {

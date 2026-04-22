@@ -143,7 +143,7 @@ function VariationChart({
   )
 }
 
-export default function TotalBalance({ range, filter }) {
+export default function TotalBalance({ range, filter, codigoFilial }) {
   const [expanded, setExpanded] = useState(false)
   // drill-down: quando o usuário clica numa coluna mensal, fixa o
   // intervalo naquele mês e o endpoint volta a agrupar por dia.
@@ -153,6 +153,8 @@ export default function TotalBalance({ range, filter }) {
   useEffect(() => { setDrillDown(null) }, [range?.from, range?.to])
   // Idem quando a categoria selecionada muda.
   useEffect(() => { setDrillDown(null) }, [filter?.op, filter?.maxPercent, filter?.minPercent])
+  // Idem quando a filial selecionada muda.
+  useEffect(() => { setDrillDown(null) }, [codigoFilial])
 
   const effectiveRange = drillDown || range
   const qsParts = []
@@ -168,6 +170,9 @@ export default function TotalBalance({ range, filter }) {
     if (typeof filter.minPercent === 'number' && filter.minPercent > 0) {
       qsParts.push(`minPercent=${filter.minPercent}`)
     }
+  }
+  if (codigoFilial) {
+    qsParts.push(`codigoFilial=${encodeURIComponent(codigoFilial)}`)
   }
   const qs = qsParts.length ? `?${qsParts.join('&')}` : ''
   const { data } = useApi(`/entradas-fiscais/metrics/variacao-diaria${qs}`, {

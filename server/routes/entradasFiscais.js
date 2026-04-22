@@ -371,7 +371,7 @@ router.post('/import', (req, res, next) => {
 //   Para op='lt':
 //     minPercent → nf <  neg*(1-min/100)
 //     maxPercent → nf >= neg*(1-max/100)
-async function computeNfVsNegociado(op, { from, to, maxPercent, minPercent }) {
+async function computeNfVsNegociado(op, { from, to, maxPercent, minPercent, codigoFilial }) {
   const cmp = op === 'gt' ? '>' : '<'
   const diff = op === 'gt'
     ? '(valor_nota_fiscal - valor_negociado_compras)'
@@ -385,6 +385,10 @@ async function computeNfVsNegociado(op, { from, to, maxPercent, minPercent }) {
        SELECT codigo FROM tipos_entrada_saida WHERE considera_analise = TRUE
      )`
   ]
+  if (codigoFilial) {
+    params.push(codigoFilial)
+    where.push(`codigo_filial = $${params.length}`)
+  }
   let hasPeriodFilter = false
   if (from) {
     params.push(from)
@@ -456,7 +460,8 @@ async function computeNfVsNegociado(op, { from, to, maxPercent, minPercent }) {
     valorizacao, valorTotal, percentValorizacao,
     from: from ?? null, to: to ?? null,
     maxPercent: maxPercent ?? null,
-    minPercent: minPercent ?? null
+    minPercent: minPercent ?? null,
+    codigoFilial: codigoFilial ?? null
   }
 }
 
@@ -469,10 +474,14 @@ function readRange(req) {
     const n = Number(v)
     return Number.isFinite(n) && n > 0 && n < 1000 ? n : undefined
   }
+  const codigoFilial = typeof req.query.codigoFilial === 'string' && req.query.codigoFilial.trim()
+    ? req.query.codigoFilial.trim().slice(0, 50)
+    : null
   return {
     from, to,
     maxPercent: parsePct(req.query.maxPercent),
-    minPercent: parsePct(req.query.minPercent)
+    minPercent: parsePct(req.query.minPercent),
+    codigoFilial
   }
 }
 
@@ -495,7 +504,7 @@ router.get('/metrics/nf-maior-que-negociado', async (req, res, next) => {
 //   ?minPercent=N          → piso (exclusivo) da diferença, em %
 router.get('/metrics/variacao-diaria', async (req, res, next) => {
   try {
-    const { from, to, maxPercent, minPercent } = readRange(req)
+    const { from, to, maxPercent, minPercent, codigoFilial } = readRange(req)
     const op = req.query.op === 'lt' || req.query.op === 'gt' ? req.query.op : null
 
     // Decide granularidade pelo comprimento do intervalo
@@ -518,6 +527,7 @@ router.get('/metrics/variacao-diaria', async (req, res, next) => {
       `valor_negociado_compras IS NOT NULL`,
       `quantidade_escriturada IS NOT NULL`
     ]
+    if (codigoFilial) { params.push(codigoFilial); where.push(`codigo_filial = $${params.length}`) }
     if (from) { params.push(from); where.push(`data_emissao_nota_fiscal >= $${params.length}`) }
     if (to)   { params.push(to);   where.push(`data_emissao_nota_fiscal <= $${params.length}`) }
 
