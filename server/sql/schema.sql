@@ -141,6 +141,28 @@ CREATE INDEX IF NOT EXISTS entradas_fiscais_produto_idx
 CREATE INDEX IF NOT EXISTS entradas_fiscais_data_idx
   ON entradas_fiscais (data_emissao_nota_fiscal);
 
+-- Vínculo opcional com grupos_produtos (classificação automática por
+-- palavra-chave). Migração idempotente — SET NULL se grupo for apagado.
+ALTER TABLE entradas_fiscais
+  ADD COLUMN IF NOT EXISTS grupo_produto_id INT;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE table_name = 'entradas_fiscais'
+      AND constraint_name = 'entradas_fiscais_grupo_produto_id_fkey'
+  ) THEN
+    ALTER TABLE entradas_fiscais
+      ADD CONSTRAINT entradas_fiscais_grupo_produto_id_fkey
+      FOREIGN KEY (grupo_produto_id)
+      REFERENCES grupos_produtos(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS entradas_fiscais_grupo_idx
+  ON entradas_fiscais (grupo_produto_id);
+
 -- Justificativas (comentários) por linha de entrada fiscal
 CREATE TABLE IF NOT EXISTS justificativas_entrada_fiscal (
   id                SERIAL PRIMARY KEY,

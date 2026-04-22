@@ -90,6 +90,10 @@ function mapRowDbToApi(row) {
     }
     out[f.camel] = v ?? null
   }
+  out.grupoProdutoId = row.grupo_produto_id ?? null
+  // Populados via LEFT JOIN em algumas views
+  out.grupoCodigo    = row.grupo_codigo    ?? null
+  out.grupoDescricao = row.grupo_descricao ?? null
   out.createdAt = row.created_at
   out.updatedAt = row.updated_at
   return out
@@ -216,11 +220,16 @@ router.get('/', async (req, res, next) => {
                OR descricao_produto ILIKE $1
                OR numero_pedido_compras ILIKE $1`
     }
+    // Alias WHERE para ef.*
+    const whereEf = where.replace(/\b(codigo_filial|numero_documento_fiscal|codigo_produto|descricao_produto|numero_pedido_compras)\b/g, 'ef.$1')
     const { rows } = await query(
-      `SELECT id, ${DB_COLS}, created_at, updated_at
-       FROM entradas_fiscais
-       ${where}
-       ORDER BY id DESC`,
+      `SELECT ef.id, ${DB_COLS.split(', ').map(c => `ef.${c}`).join(', ')},
+              ef.grupo_produto_id, gp.codigo AS grupo_codigo, gp.descricao AS grupo_descricao,
+              ef.created_at, ef.updated_at
+         FROM entradas_fiscais ef
+         LEFT JOIN grupos_produtos gp ON gp.id = ef.grupo_produto_id
+         ${whereEf}
+        ORDER BY ef.id DESC`,
       params
     )
     res.json(rows.map(mapRowDbToApi))
@@ -633,9 +642,11 @@ router.get('/items', async (req, res, next) => {
 
     const { rows } = await query(
       `SELECT ef.id, ${DB_COLS.split(', ').map(c => `ef.${c}`).join(', ')},
+              ef.grupo_produto_id, gp.codigo AS grupo_codigo, gp.descricao AS grupo_descricao,
               ef.created_at, ef.updated_at,
               COALESCE(j.cnt, 0)::int AS justificativas_count
          FROM entradas_fiscais ef
+         LEFT JOIN grupos_produtos gp ON gp.id = ef.grupo_produto_id
          LEFT JOIN (
            SELECT entrada_fiscal_id, COUNT(*) AS cnt
              FROM justificativas_entrada_fiscal
@@ -728,6 +739,137 @@ router.delete('/:id/justificativas/:justId', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// CLASSIFY BY GRUPO: varre entradas_fiscais e vincula o melhor grupo
+// cuja palavra_chave aparece em descricao_produto.
+// Dois algoritmos empilhados:
+//   1. Palavra inteira (word-boundary) na descrição normalizada — peso alto
+//   2. Substring simples na descrição normalizada — peso baixo
+// Desempate: maior comprimento da palavra-chave; depois codigo do grupo asc.
+router.post('/classificar-grupos', async (req, res, next) => {
+  try {
+    const mode = (req.body?.mode || req.query?.mode || 'all').toString()
+    if (!['all', 'unclassified'].includes(mode)) {
+      return res.status(400).json({ error: 'invalid_mode' })
+    }
+
+    const grupos = (await query(
+      `SELECT id, codigo, descricao, palavra_chave
+         FROM grupos_produtos
+        WHERE palavra_chave IS NOT NULL AND palavra_chave <> ''`
+    )).rows
+    if (!grupos.length) {
+      return res.status(409).json({
+        error: 'no_grupos',
+        message: 'Nenhum grupo cadastrado com palavra-chave'
+      })
+    }
+
+    const entradasWhere = [
+      `descricao_produto IS NOT NULL`,
+      `descricao_produto <> ''`
+    ]
+    if (mode === 'unclassified') entradasWhere.push(`grupo_produto_id IS NULL`)
+    const entradas = (await query(
+      `SELECT id, descricao_produto
+         FROM entradas_fiscais
+        WHERE ${entradasWhere.join(' AND ')}`
+    )).rows
+
+    const normalize = (s) => String(s || '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+    // Pré-processa grupos (normaliza + compila regex de palavra inteira)
+    const preparedGrupos = grupos.map((g) => {
+      const kw = normalize(g.palavra_chave).trim()
+      return kw ? {
+        id: g.id,
+        codigo: g.codigo,
+        kw,
+        kwLen: kw.length,
+        wordRe: new RegExp(`(^|[^a-z0-9])${escapeRegExp(kw)}($|[^a-z0-9])`)
+      } : null
+    }).filter(Boolean)
+
+    const byAlgo = { word: 0, substring: 0 }
+    const perGrupo = new Map()    // grupoId -> count
+    const updates = []            // [{id, grupoId}]
+    let unmatched = 0
+
+    for (const ef of entradas) {
+      const desc = normalize(ef.descricao_produto)
+      let best = null
+      for (const g of preparedGrupos) {
+        let score = 0
+        let algo = null
+        if (g.wordRe.test(desc))       { score = 1000 + g.kwLen; algo = 'word' }
+        else if (desc.includes(g.kw))  { score = g.kwLen;        algo = 'substring' }
+        if (score > 0) {
+          if (!best || score > best.score ||
+             (score === best.score && g.codigo < best.codigo)) {
+            best = { grupoId: g.id, score, algo }
+          }
+        }
+      }
+      if (best) {
+        updates.push({ id: ef.id, grupoId: best.grupoId })
+        byAlgo[best.algo] = (byAlgo[best.algo] || 0) + 1
+        perGrupo.set(best.grupoId, (perGrupo.get(best.grupoId) || 0) + 1)
+      } else {
+        unmatched++
+      }
+    }
+
+    const startedAt = Date.now()
+    let updated = 0
+    if (updates.length) {
+      const BATCH = 5000
+      const client = await pool.connect()
+      try {
+        await client.query('BEGIN')
+        for (let i = 0; i < updates.length; i += BATCH) {
+          const chunk = updates.slice(i, i + BATCH)
+          const ids = chunk.map((u) => u.id)
+          const gids = chunk.map((u) => u.grupoId)
+          await client.query(
+            `UPDATE entradas_fiscais AS ef
+                SET grupo_produto_id = u.grupo_id,
+                    updated_at = NOW()
+               FROM (
+                 SELECT * FROM unnest($1::int[], $2::int[]) AS t(id, grupo_id)
+               ) u
+              WHERE ef.id = u.id`,
+            [ids, gids]
+          )
+          updated += chunk.length
+        }
+        await client.query('COMMIT')
+      } catch (e) {
+        await client.query('ROLLBACK').catch(() => {})
+        return next(e)
+      } finally {
+        client.release()
+      }
+    }
+
+    const breakdown = Array.from(perGrupo.entries()).map(([id, count]) => {
+      const g = grupos.find((x) => x.id === id)
+      return { id, codigo: g?.codigo, descricao: g?.descricao, count }
+    }).sort((a, b) => b.count - a.count)
+
+    res.json({
+      mode,
+      scanned: entradas.length,
+      updated,
+      unmatched,
+      algorithms: byAlgo,
+      grupos: breakdown,
+      elapsedMs: Date.now() - startedAt
+    })
+  } catch (err) { next(err) }
+})
+
 // GET ONE
 router.get('/:id', async (req, res, next) => {
   try {
@@ -736,7 +878,12 @@ router.get('/:id', async (req, res, next) => {
       return res.status(400).json({ error: 'invalid_id' })
     }
     const { rows } = await query(
-      `SELECT id, ${DB_COLS}, created_at, updated_at FROM entradas_fiscais WHERE id = $1`,
+      `SELECT ef.id, ${DB_COLS.split(', ').map(c => `ef.${c}`).join(', ')},
+              ef.grupo_produto_id, gp.codigo AS grupo_codigo, gp.descricao AS grupo_descricao,
+              ef.created_at, ef.updated_at
+         FROM entradas_fiscais ef
+         LEFT JOIN grupos_produtos gp ON gp.id = ef.grupo_produto_id
+        WHERE ef.id = $1`,
       [id]
     )
     if (!rows.length) return res.status(404).json({ error: 'not_found' })

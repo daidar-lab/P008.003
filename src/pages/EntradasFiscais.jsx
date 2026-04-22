@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Plus, Pencil, Trash2, RefreshCw, Upload } from 'lucide-react'
+import { Plus, Pencil, Trash2, RefreshCw, Upload, Layers } from 'lucide-react'
 import { apiGet, apiSend } from '../api.js'
 import { FIELDS, formatValue } from './entradasFiscaisFields.js'
 import EntradaFiscalForm from './EntradaFiscalForm.jsx'
 import ImportEntradasFiscaisModal from './ImportEntradasFiscaisModal.jsx'
+import ClassificarGruposModal from './ClassificarGruposModal.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import DataTable from '../components/DataTable.jsx'
 
@@ -16,6 +17,7 @@ export default function EntradasFiscais() {
   const [editing, setEditing] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [importing, setImporting] = useState(false)
+  const [classifying, setClassifying] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   const load = useCallback(async () => {
@@ -77,6 +79,15 @@ export default function EntradasFiscais() {
       format: (v) => formatValue(f, v)
     })),
     {
+      key: 'grupoCodigo', label: 'Grupo', minWidth: 160,
+      accessor: (row) => row.grupoCodigo || '',
+      format: (_, row) => row.grupoCodigo
+        ? <span className="grupo-pill" title={row.grupoDescricao || ''}>
+            <Layers size={11} /> {row.grupoCodigo}
+          </span>
+        : <span className="nf-muted">—</span>
+    },
+    {
       key: '__actions', label: 'Ações', className: 'col-actions sticky-right',
       sticky: 'right', sortable: false, filterable: false,
       render: (row) => (
@@ -102,6 +113,10 @@ export default function EntradasFiscais() {
         <div className="actions">
           <button className="btn btn-ghost" onClick={load} aria-label="Recarregar">
             <RefreshCw size={14} />
+          </button>
+          <button className="btn" onClick={() => setClassifying(true)} title="Classificar itens por grupo">
+            <Layers size={14} />
+            <span>Classificar grupos</span>
           </button>
           <button className="btn" onClick={() => setImporting(true)}>
             <Upload size={14} />
@@ -146,6 +161,13 @@ export default function EntradasFiscais() {
         <ImportEntradasFiscaisModal
           onCancel={() => setImporting(false)}
           onImported={load}
+        />
+      )}
+
+      {classifying && (
+        <ClassificarGruposModal
+          onClose={() => setClassifying(false)}
+          onDone={load}
         />
       )}
 
