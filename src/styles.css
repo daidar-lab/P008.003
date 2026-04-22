@@ -1420,3 +1420,33 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   font-size: 11.5px; color: var(--text-3);
   padding: 0 4px;
 }
+
+/* Tabela de variação por grupo (Dashboard · row-3) */
+.grupo-variacao-table { font-size: 12.5px; }
+.grupo-variacao-table th { padding: 0 10px 8px; }
+.grupo-variacao-table td { padding: 8px 10px; }
+.grupo-variacao-table tfoot td {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.grupo-cell {
+  display: flex; flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.grupo-cell .grupo-pill { align-self: flex-start; }
+.grupo-cell .grupo-desc {
+  font-size: 11.5px;
+  color: var(--text-2);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grupo-variacao-table .status-pill small {
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

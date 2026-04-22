@@ -5,7 +5,7 @@ import TopBar, {
 import TotalBalance from '../components/TotalBalance.jsx'
 import Performance from '../components/Performance.jsx'
 import SpentAmount from '../components/SpentAmount.jsx'
-import Spending from '../components/Spending.jsx'
+import VariacaoPorGrupo from '../components/VariacaoPorGrupo.jsx'
 import Revenue from '../components/Revenue.jsx'
 import NfVariationCard from '../components/NfVariationCard.jsx'
 import DayDetailsModal from '../components/DayDetailsModal.jsx'
@@ -133,7 +133,7 @@ export default function Overview2() {
 
       <section className="grid row-3">
         <SpentAmount />
-        <Spending />
+        <VariacaoPorGrupo range={activeRange} codigoFilial={filialCodigo} />
         <Revenue />
       </section>
 

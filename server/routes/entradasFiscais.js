@@ -604,6 +604,95 @@ router.get('/metrics/variacao-diaria', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// METRICS: variação agregada por grupo de produtos.
+// Considera somente registros que passam em considera_analise (tipo).
+// Linhas sem grupo classificado caem num bucket com grupoId = null.
+// Respeita ?from=&to=&codigoFilial=.
+router.get('/metrics/variacao-por-grupo', async (req, res, next) => {
+  try {
+    const { from, to, codigoFilial } = readRange(req)
+
+    const params = []
+    const where = [
+      `ef.codigo_tipo_entrada IN (SELECT codigo FROM tipos_entrada_saida WHERE considera_analise = TRUE)`,
+      `ef.valor_nota_fiscal IS NOT NULL`,
+      `ef.valor_negociado_compras IS NOT NULL`,
+      `ef.quantidade_escriturada IS NOT NULL`
+    ]
+    if (codigoFilial) { params.push(codigoFilial); where.push(`ef.codigo_filial = $${params.length}`) }
+    if (from) { params.push(from); where.push(`ef.data_emissao_nota_fiscal >= $${params.length}`) }
+    if (to)   { params.push(to);   where.push(`ef.data_emissao_nota_fiscal <= $${params.length}`) }
+    if (from || to) where.push(`ef.data_emissao_nota_fiscal IS NOT NULL`)
+
+    const { rows } = await query(
+      `SELECT
+         gp.id            AS grupo_id,
+         gp.codigo        AS grupo_codigo,
+         gp.descricao     AS grupo_descricao,
+         gp.palavra_chave AS grupo_palavra_chave,
+         COUNT(*)::int    AS count,
+         COALESCE(SUM(CASE
+           WHEN ef.valor_nota_fiscal < ef.valor_negociado_compras
+           THEN ef.quantidade_escriturada * (ef.valor_negociado_compras - ef.valor_nota_fiscal)
+           ELSE 0 END), 0)::numeric AS savings,
+         COALESCE(SUM(CASE
+           WHEN ef.valor_nota_fiscal > ef.valor_negociado_compras
+           THEN ef.quantidade_escriturada * (ef.valor_nota_fiscal - ef.valor_negociado_compras)
+           ELSE 0 END), 0)::numeric AS overspend,
+         COALESCE(SUM(ef.quantidade_escriturada * ef.valor_negociado_compras), 0)::numeric AS valor_total
+       FROM entradas_fiscais ef
+       LEFT JOIN grupos_produtos gp ON gp.id = ef.grupo_produto_id
+       WHERE ${where.join(' AND ')}
+       GROUP BY gp.id, gp.codigo, gp.descricao, gp.palavra_chave
+       ORDER BY (
+         COALESCE(SUM(CASE
+           WHEN ef.valor_nota_fiscal > ef.valor_negociado_compras
+           THEN ef.quantidade_escriturada * (ef.valor_nota_fiscal - ef.valor_negociado_compras)
+           ELSE 0 END), 0) +
+         COALESCE(SUM(CASE
+           WHEN ef.valor_nota_fiscal < ef.valor_negociado_compras
+           THEN ef.quantidade_escriturada * (ef.valor_negociado_compras - ef.valor_nota_fiscal)
+           ELSE 0 END), 0)
+       ) DESC,
+       gp.codigo ASC NULLS LAST`,
+      params
+    )
+
+    const groups = rows.map((r) => {
+      const savings   = Number(r.savings)
+      const overspend = Number(r.overspend)
+      const valorTot  = Number(r.valor_total)
+      const net       = savings - overspend
+      return {
+        grupoId: r.grupo_id,
+        codigo: r.grupo_codigo,
+        descricao: r.grupo_descricao,
+        palavraChave: r.grupo_palavra_chave,
+        count: r.count,
+        savings, overspend, net,
+        valorTotal: valorTot,
+        percentValorizacao: valorTot > 0 ? (Math.abs(net) / valorTot) * 100 : 0
+      }
+    })
+
+    const totals = groups.reduce((acc, g) => {
+      acc.count      += g.count
+      acc.savings    += g.savings
+      acc.overspend  += g.overspend
+      acc.net        += g.net
+      acc.valorTotal += g.valorTotal
+      return acc
+    }, { count: 0, savings: 0, overspend: 0, net: 0, valorTotal: 0 })
+
+    res.json({
+      from: from ?? null, to: to ?? null,
+      codigoFilial: codigoFilial ?? null,
+      groups,
+      totals
+    })
+  } catch (err) { next(err) }
+})
+
 // ITEM LIST: linhas de entradas_fiscais com filtros de período/categoria/filial
 // Serve tanto o clique numa coluna diária do Total Balance (from=to=date)
 // quanto o clique direito num card NF (range inteiro do período ativo).
