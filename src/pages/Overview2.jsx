@@ -112,7 +112,7 @@ const EXPLANATION_DATA = {
   }
 }
 
-export default function Overview2() {
+export default function Overview2({ onNavigate }) {
   const [period, setPeriod] = useState(PERIOD_THIS_MONTH)
   const [customRange, setCustomRange] = useState(() => monthRange(0))
   const [selectedCard, setSelectedCard] = useState(null)
@@ -237,7 +237,10 @@ export default function Overview2() {
           onExplainClick={handleExplainPriorizacao}
         />
 
-        <ImpactoProducaoCard onExplainClick={handleExplainImpactoProducao} />
+        <ImpactoProducaoCard
+          onExplainClick={handleExplainImpactoProducao}
+          onPortalClick={() => onNavigate && onNavigate('portal-do-custo')}
+        />
       </section>
 
       {explainOpen && (

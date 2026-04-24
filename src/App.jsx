@@ -26,7 +26,7 @@ export default function App() {
     <div className="app">
       <Sidebar route={route} onNavigate={setRoute} />
       <main className="main">
-        <Page />
+        <Page onNavigate={setRoute} />
       </main>
     </div>
   )

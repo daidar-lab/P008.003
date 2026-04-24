@@ -1,6 +1,6 @@
 import { TrendingUp, TrendingDown, AlertTriangle, Package } from 'lucide-react'
 
-export default function ImpactoProducaoCard({ onExplainClick }) {
+export default function ImpactoProducaoCard({ onExplainClick, onPortalClick }) {
   // Dados mock de impacto na produção
   const impactos = [
     {
@@ -127,7 +127,7 @@ export default function ImpactoProducaoCard({ onExplainClick }) {
         <button
           type="button"
           className="impacto-view-all"
-          onClick={() => {}}
+          onClick={() => onPortalClick && onPortalClick()}
         >
           Ver todos os impactos →
         </button>

@@ -1191,6 +1191,12 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .impacto-producao-card {
   background: linear-gradient(135deg, #f5f3ff 0%, #f0f9ff 100%);
   position: relative;
+  min-height: 420px;
+}
+
+.impacto-producao-card .nf-explain-card-btn {
+  right: 16px;
+  bottom: 16px;
 }
 
 .impacto-summary {
