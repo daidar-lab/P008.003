@@ -138,6 +138,7 @@ export default function ImpactoProducaoCard({ onExplainClick, onPortalClick }) {
           type="button"
           className="nf-explain-card-btn"
           onClick={(e) => { e.stopPropagation(); onExplainClick() }}
+          title="Explique essa tela"
         >
           Explique essa tela
         </button>

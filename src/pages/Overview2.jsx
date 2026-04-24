@@ -3,10 +3,7 @@ import TopBar, {
   PERIOD_THIS_MONTH, PERIOD_LAST_MONTH
 } from '../components/TopBar.jsx'
 import TotalBalance from '../components/TotalBalance.jsx'
-import Performance from '../components/Performance.jsx'
-import SpentAmount from '../components/SpentAmount.jsx'
 import VariacaoPorGrupo from '../components/VariacaoPorGrupo.jsx'
-import Revenue from '../components/Revenue.jsx'
 import NfVariationCard from '../components/NfVariationCard.jsx'
 import PriorizacaoAuditoria from '../components/PriorizacaoAuditoria.jsx'
 import ImpactoProducaoCard from '../components/ImpactoProducaoCard.jsx'
@@ -231,7 +228,9 @@ export default function Overview2({ onNavigate }) {
             Explique essa tela
           </button>
         )}
+      </section>
 
+      <section className="grid row-2">
         <PriorizacaoAuditoria 
           onClick={() => setFornecedoresModalOpen(true)}
           onExplainClick={handleExplainPriorizacao}
@@ -274,19 +273,13 @@ export default function Overview2({ onNavigate }) {
         </>
       )}
 
-      <section className="grid row-2">
+      <section className="grid row-grupos">
         <TotalBalance
           range={activeRange}
           filter={totalBalanceFilter}
           codigoFilial={filialCodigo}
           onExplainClick={handleExplainTotalBalance}
         />
-        <Performance />
-      </section>
-
-      <section className="grid row-3">
-        <SpentAmount />
-        <Revenue />
       </section>
 
       <section className="grid row-grupos">

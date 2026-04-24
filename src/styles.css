@@ -250,6 +250,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 /* ---------- Card ---------- */
 .card {
+  position: relative;
   background: var(--panel);
   border-radius: var(--radius);
   padding: 18px;
@@ -1056,20 +1057,21 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 .nf-explain-card-btn {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
+  right: 14px;
+  bottom: 14px;
   z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
+  padding: 5px 9px;
+  min-width: 120px;
   border-radius: 999px;
   border: 1px solid rgba(16,24,40,0.08);
   background: rgba(255,255,255,0.95);
   color: var(--text);
   font-size: 10px;
   font-weight: 600;
-  box-shadow: 0 12px 24px rgba(16,24,40,0.12);
+  box-shadow: 0 10px 18px rgba(16,24,40,0.12);
   cursor: pointer;
 }
 .nf-explain-card-btn:hover {
@@ -1189,14 +1191,27 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 /* ========== Impacto na Produção Card ========== */
 .impacto-producao-card {
-  background: linear-gradient(135deg, #f5f3ff 0%, #f0f9ff 100%);
   position: relative;
   min-height: 420px;
 }
 
-.impacto-producao-card .nf-explain-card-btn {
-  right: 16px;
-  bottom: 16px;
+.impacto-explain-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(79, 70, 229, 0.16);
+  background: #eef2ff;
+  color: #312e81;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.impacto-explain-btn:hover {
+  background: #e0e7ff;
+  transform: translateY(-1px);
 }
 
 .impacto-summary {
