@@ -86,6 +86,16 @@ const EXPLANATION_DATA = {
     title: 'Itens NF > Negociado (acima de 2%)',
     description: 'Mostra itens com diferença maior que 2% acima do negociado. O texto reforça que os valores estão zerados ou fictícios porque o backend não está conectado a um banco de dados real.',
     status: 'Mock local'
+  },
+  totalBalance: {
+    title: 'Total Balance',
+    description: 'Este gráfico mostra a variação diária ou mensal entre itens com NF abaixo do negociado (economia) versus NF acima do negociado (sobrepreço). O saldo líquido representa a diferença entre essas duas categorias.',
+    status: 'Gráfico interativo'
+  },
+  variacaoGrupo: {
+    title: 'Variação por Grupo de Produtos',
+    description: 'Esta tabela agrupa os produtos por categoria e mostra como cada grupo se comporta em relação aos cenários de NF versus valor negociado. Permite identificar padrões de economia ou sobrepreço por tipo de produto.',
+    status: 'Análise por categoria'
   }
 }
 
@@ -99,6 +109,7 @@ export default function Overview2() {
   const [explainOpen, setExplainOpen] = useState(false)
   const [explanation, setExplanation] = useState(null)
   const [explanationLoading, setExplanationLoading] = useState(false)
+  const [currentExplanationKey, setCurrentExplanationKey] = useState(null)
 
   const { data: filiais } = useApi('/filiais', { fallback: [] })
   const filiaisList = Array.isArray(filiais) ? filiais : []
@@ -113,6 +124,7 @@ export default function Overview2() {
   const totalBalanceFilter = selected
     ? { ...selected.filter, label: selected.title, color: selected.dotColor }
     : null
+  const filialCodigo = codigoFilial || null
 
   const loadExplanation = useCallback(async (key) => {
     setExplanationLoading(true)
@@ -124,19 +136,38 @@ export default function Overview2() {
     return payload
   }, [])
 
-  const handleExplainClick = async () => {
-    setExplainOpen(true)
-    await loadExplanation(selectedCard || 'screen')
+  const toggleExplanation = async (key) => {
+    if (explainOpen && currentExplanationKey === key) {
+      // Se já está aberto com a mesma explicação, fecha
+      setExplainOpen(false)
+      setCurrentExplanationKey(null)
+    } else {
+      // Abre com nova explicação
+      setExplainOpen(true)
+      setCurrentExplanationKey(key)
+      await loadExplanation(key)
+    }
   }
 
+  const closeExplanation = () => {
+    setExplainOpen(false)
+    setCurrentExplanationKey(null)
+  }
+
+  const handleExplainClick = () => toggleExplanation(selectedCard || 'screen')
+  const handleExplainTotalBalance = () => toggleExplanation('totalBalance')
+  const handleExplainVariacaoGrupo = () => toggleExplanation('variacaoGrupo')
+
+  // Fechar modal com ESC
   useEffect(() => {
-    if (!explainOpen) return
-    loadExplanation(selectedCard || 'screen')
-  }, [selectedCard, explainOpen, loadExplanation])
-
-  const toggle = (key) => setSelectedCard((prev) => (prev === key ? null : key))
-
-  const filialCodigo = codigoFilial || null
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && explainOpen) {
+        closeExplanation()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [explainOpen])
 
   return (
     <>
@@ -186,17 +217,34 @@ export default function Overview2() {
       </section>
 
       {explainOpen && (
-        <section className="explain-panel">
-          <div className="explain-panel-head">
-            <h2>{explanationLoading ? 'Carregando explicação…' : explanation?.title || 'Explicação'}</h2>
-            <span className="explain-panel-status">{explanationLoading ? 'Aguardando' : explanation?.status || 'Prototipo'}</span>
+        <>
+          <div className="explain-modal-overlay" onClick={closeExplanation} />
+          <div className="explain-modal">
+            <div className="explain-modal-content">
+              <div className="explain-modal-head">
+                <h2>{explanationLoading ? 'Carregando explicação…' : explanation?.title || 'Explicação'}</h2>
+                <button
+                  type="button"
+                  className="explain-modal-close"
+                  onClick={closeExplanation}
+                  aria-label="Fechar explicação"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="explain-modal-body">
+                <span className="explain-modal-status">
+                  {explanationLoading ? 'Aguardando' : explanation?.status || 'Prototipo'}
+                </span>
+                <p>
+                  {explanationLoading
+                    ? 'Buscando explicação do componente selecionado…'
+                    : explanation?.description || 'Clique em um dos botões "Explique essa tela" para ver o contexto.'}
+                </p>
+              </div>
+            </div>
           </div>
-          <p>
-            {explanationLoading
-              ? 'Buscando explicação do card selecionado…'
-              : explanation?.description || 'Clique em um dos cards ou em Explique essa tela para ver o contexto.'}
-          </p>
-        </section>
+        </>
       )}
 
       <section className="grid row-2">
@@ -204,6 +252,7 @@ export default function Overview2() {
           range={activeRange}
           filter={totalBalanceFilter}
           codigoFilial={filialCodigo}
+          onExplainClick={handleExplainTotalBalance}
         />
         <Performance />
       </section>
@@ -214,7 +263,7 @@ export default function Overview2() {
       </section>
 
       <section className="grid row-grupos">
-        <VariacaoPorGrupo range={activeRange} codigoFilial={filialCodigo} />
+        <VariacaoPorGrupo range={activeRange} codigoFilial={filialCodigo} onExplainClick={handleExplainVariacaoGrupo} />
       </section>
 
       {detailsCtx && (

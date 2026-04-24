@@ -41,7 +41,7 @@ function ScenarioCell({ cell, color }) {
   )
 }
 
-export default function VariacaoPorGrupo({ range, codigoFilial }) {
+export default function VariacaoPorGrupo({ range, codigoFilial, onExplainClick }) {
   const parts = []
   if (range?.from && range?.to && range.from <= range.to) {
     parts.push(`from=${encodeURIComponent(range.from)}`)
@@ -79,7 +79,7 @@ export default function VariacaoPorGrupo({ range, codigoFilial }) {
         </button>
       </div>
 
-      <div className="table-wrap">
+      <div className="table-wrap" style={{ position: 'relative' }}>
         <table className="table grupo-variacao-table">
           <thead>
             <tr>
@@ -188,6 +188,16 @@ export default function VariacaoPorGrupo({ range, codigoFilial }) {
             </tfoot>
           )}
         </table>
+        {typeof onExplainClick === 'function' && (
+          <button
+            type="button"
+            className="chart-explain-btn"
+            onClick={onExplainClick}
+            title="Explique essa tela"
+          >
+            Explique essa tela
+          </button>
+        )}
       </div>
     </div>
   )

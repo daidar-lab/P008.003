@@ -144,7 +144,7 @@ function VariationChart({
   )
 }
 
-export default function TotalBalance({ range, filter, codigoFilial }) {
+export default function TotalBalance({ range, filter, codigoFilial, onExplainClick }) {
   const [expanded, setExpanded] = useState(false)
   // drill-down: quando o usuário clica numa coluna mensal, fixa o
   // intervalo naquele mês e o endpoint volta a agrupar por dia.
@@ -215,7 +215,7 @@ export default function TotalBalance({ range, filter, codigoFilial }) {
 
   return (
     <>
-      <div className="card">
+      <div className="card total-balance-card">
         <div className="card-head">
           <span className="card-title">Total Balance</span>
           <button
@@ -263,12 +263,22 @@ export default function TotalBalance({ range, filter, codigoFilial }) {
           </button>
         )}
 
-        <div style={{ height: 180, marginTop: 10 }}>
+        <div style={{ height: 180, marginTop: 10, position: 'relative' }}>
           <VariationChart
             series={series}
             granularity={granularity}
             onBarClick={handleBarClick}
           />
+          {typeof onExplainClick === 'function' && (
+            <button
+              type="button"
+              className="chart-explain-btn"
+              onClick={onExplainClick}
+              title="Explique essa tela"
+            >
+              Explique essa tela
+            </button>
+          )}
         </div>
 
         <div className="legend">

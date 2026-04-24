@@ -1036,14 +1036,14 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 18px;
+  gap: 6px;
+  padding: 8px 12px;
   border-radius: 999px;
   border: none;
   background: var(--accent);
   color: white;
-  font-weight: 700;
-  font-size: 13px;
+  font-weight: 600;
+  font-size: 11px;
   box-shadow: 0 18px 32px rgba(16,24,40,0.18);
   transition: transform 180ms ease, background 180ms ease;
 }
@@ -1053,56 +1053,135 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 .nf-explain-card-btn {
   position: absolute;
-  right: 14px;
-  bottom: 14px;
+  right: 12px;
+  bottom: 12px;
   z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 14px;
+  padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid rgba(16,24,40,0.08);
   background: rgba(255,255,255,0.95);
   color: var(--text);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 600;
   box-shadow: 0 12px 24px rgba(16,24,40,0.12);
   cursor: pointer;
 }
 .nf-explain-card-btn:hover {
   background: white;
 }
-.explain-panel {
-  grid-column: 1 / -1;
+.explain-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.explain-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  padding: 20px;
+}
+
+.explain-modal-content {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 22px;
-  padding: 22px;
-  box-shadow: var(--shadow);
-  margin-top: 18px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
 }
-.explain-panel-head {
+
+.explain-modal-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
 }
-.explain-panel-head h2 {
+
+.explain-modal-head h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
 }
-.explain-panel-status {
+
+.explain-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
   color: var(--text-3);
-  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.explain-modal-close:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.explain-modal-body {
+  padding: 20px 24px;
+}
+
+.explain-modal-status {
+  display: inline-block;
+  color: var(--text-3);
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 700;
+  background: var(--bg-2);
+  padding: 4px 8px;
+  border-radius: 12px;
+  margin-bottom: 12px;
 }
-.explain-panel p {
+
+.explain-modal-body p {
   margin: 0;
-  line-height: 1.7;
+  line-height: 1.6;
   color: var(--text);
+}
+.chart-explain-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(16,24,40,0.08);
+  background: rgba(255,255,255,0.95);
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 600;
+  box-shadow: 0 8px 16px rgba(16,24,40,0.12);
+  cursor: pointer;
+  transition: background 180ms ease;
+}
+.chart-explain-btn:hover {
+  background: white;
 }
 
 @media (max-width: 1400px) {
