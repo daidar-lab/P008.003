@@ -2,12 +2,13 @@ import { useState } from 'react'
 import {
   LayoutDashboard, MoreVertical,
   FolderOpen, ChevronDown, ChevronRight,
-  ArrowRightLeft, ShoppingBag, Receipt, Building2, Layers
+  ArrowRightLeft, ShoppingBag, Receipt, Building2, Layers, DollarSign
 } from 'lucide-react'
 
 const primary = [
   { icon: LayoutDashboard, label: 'Dashboard',        route: 'dashboard' },
-  { icon: Receipt,         label: 'Entradas Fiscais', route: 'entradas-fiscais' }
+  { icon: Receipt,         label: 'Entradas Fiscais', route: 'entradas-fiscais' },
+  { icon: DollarSign,      label: 'Portal do Custo',  route: 'portal-do-custo' }
 ]
 
 const cadastros = [
