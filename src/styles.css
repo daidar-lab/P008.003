@@ -941,7 +941,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 
 /* ---------- NF Variation card (Home 2) ---------- */
-.nf-card { gap: 4px; }
+.nf-card {
+  gap: 4px;
+  position: relative;
+}
 .nf-primary { margin: 2px 0 8px; }
 .nf-sublabel {
   display: block;

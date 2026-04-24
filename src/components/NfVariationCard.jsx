@@ -37,7 +37,6 @@ export default function NfVariationCard({
   onClick,
   onContextMenu,
   selected = false,
-  showExplainButton = false,
   onExplainClick
 }) {
   const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown
@@ -131,7 +130,7 @@ export default function NfVariationCard({
         </div>
       </div>
 
-      {showExplainButton && typeof onExplainClick === 'function' && (
+      {typeof onExplainClick === 'function' && (
         <button
           type="button"
           className="nf-explain-card-btn"

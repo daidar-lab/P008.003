@@ -194,9 +194,8 @@ export default function Overview2() {
             minPercent={c.minPercent}
             codigoFilial={filialCodigo}
             selected={selectedCard === c.key}
-            showExplainButton={selectedCard === c.key}
             onClick={() => toggle(c.key)}
-            onExplainClick={handleExplainClick}
+            onExplainClick={() => toggleExplanation(c.key)}
             onContextMenu={() => setDetailsCtx({
               range: activeRange,
               codigoFilial: filialCodigo,
