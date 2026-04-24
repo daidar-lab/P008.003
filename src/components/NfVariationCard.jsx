@@ -36,7 +36,9 @@ export default function NfVariationCard({
   codigoFilial,
   onClick,
   onContextMenu,
-  selected = false
+  selected = false,
+  showExplainButton = false,
+  onExplainClick
 }) {
   const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown
   const validRange = range?.from && range?.to && range.from <= range.to
@@ -128,6 +130,16 @@ export default function NfVariationCard({
           </div>
         </div>
       </div>
+
+      {showExplainButton && typeof onExplainClick === 'function' && (
+        <button
+          type="button"
+          className="nf-explain-card-btn"
+          onClick={(e) => { e.stopPropagation(); onExplainClick() }}
+        >
+          Explique essa tela
+        </button>
+      )}
     </div>
   )
 }

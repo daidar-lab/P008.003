@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import TopBar, {
   PERIOD_THIS_MONTH, PERIOD_LAST_MONTH
 } from '../components/TopBar.jsx'
@@ -61,6 +61,34 @@ const CARDS = [
   }
 ]
 
+const EXPLANATION_DATA = {
+  screen: {
+    title: 'Explique esta tela',
+    description: 'Este painel traz o conceito de auditoria de entradas fiscais com cards de itens abaixo, acima e próximos ao valor negociado. Os dados estão apresentados como protótipo visual e, por isso, o contexto informa que os valores podem ser ilustrativos ou zerados no mock.',
+    status: 'Tela geral'
+  },
+  lt: {
+    title: 'Itens NF < Negociado',
+    description: 'Mostra itens cuja nota fiscal ficou abaixo do valor negociado. Como este é um protótipo sem backend real, os valores são mockados e servem apenas para demonstrar a interação de seleção e explicação contextual.',
+    status: 'Mock local'
+  },
+  gt: {
+    title: 'Itens NF > Negociado',
+    description: 'Refere-se a itens cuja nota fiscal ficou acima do valor negociado. A explicação contextual destaca o significado do card e informa que os valores não vêm de um banco de dados real.',
+    status: 'Mock local'
+  },
+  'gt-le2': {
+    title: 'Itens NF > Negociado (até 2%)',
+    description: 'Exibe itens com diferença de até 2% acima do negociado. Este card tem intenção de mostrar como o dashboard separaria faixas de exceção mesmo quando os dados são apenas simulados.',
+    status: 'Mock local'
+  },
+  'gt-gt2': {
+    title: 'Itens NF > Negociado (acima de 2%)',
+    description: 'Mostra itens com diferença maior que 2% acima do negociado. O texto reforça que os valores estão zerados ou fictícios porque o backend não está conectado a um banco de dados real.',
+    status: 'Mock local'
+  }
+}
+
 export default function Overview2() {
   const [period, setPeriod] = useState(PERIOD_THIS_MONTH)
   const [customRange, setCustomRange] = useState(() => monthRange(0))
@@ -68,6 +96,9 @@ export default function Overview2() {
   const [codigoFilial, setCodigoFilial] = useState('')
   // Right-click em um card abre o modal de detalhes focado naquela categoria.
   const [detailsCtx, setDetailsCtx] = useState(null)
+  const [explainOpen, setExplainOpen] = useState(false)
+  const [explanation, setExplanation] = useState(null)
+  const [explanationLoading, setExplanationLoading] = useState(false)
 
   const { data: filiais } = useApi('/filiais', { fallback: [] })
   const filiaisList = Array.isArray(filiais) ? filiais : []
@@ -82,6 +113,26 @@ export default function Overview2() {
   const totalBalanceFilter = selected
     ? { ...selected.filter, label: selected.title, color: selected.dotColor }
     : null
+
+  const loadExplanation = useCallback(async (key) => {
+    setExplanationLoading(true)
+    const payload = await new Promise((resolve) => {
+      window.setTimeout(() => resolve(EXPLANATION_DATA[key] ?? EXPLANATION_DATA.screen), 120)
+    })
+    setExplanation(payload)
+    setExplanationLoading(false)
+    return payload
+  }, [])
+
+  const handleExplainClick = async () => {
+    setExplainOpen(true)
+    await loadExplanation(selectedCard || 'screen')
+  }
+
+  useEffect(() => {
+    if (!explainOpen) return
+    loadExplanation(selectedCard || 'screen')
+  }, [selectedCard, explainOpen, loadExplanation])
 
   const toggle = (key) => setSelectedCard((prev) => (prev === key ? null : key))
 
@@ -99,7 +150,7 @@ export default function Overview2() {
         onCodigoFilialChange={setCodigoFilial}
       />
 
-      <section className="grid row-nf">
+      <section className="grid row-nf nf-dashboard-wrap">
         {CARDS.map((c) => (
           <NfVariationCard
             key={c.key}
@@ -112,7 +163,9 @@ export default function Overview2() {
             minPercent={c.minPercent}
             codigoFilial={filialCodigo}
             selected={selectedCard === c.key}
+            showExplainButton={selectedCard === c.key}
             onClick={() => toggle(c.key)}
+            onExplainClick={handleExplainClick}
             onContextMenu={() => setDetailsCtx({
               range: activeRange,
               codigoFilial: filialCodigo,
@@ -120,7 +173,31 @@ export default function Overview2() {
             })}
           />
         ))}
+
+        {!selectedCard && (
+          <button
+            type="button"
+            className="explain-screen-btn"
+            onClick={handleExplainClick}
+          >
+            Explique essa tela
+          </button>
+        )}
       </section>
+
+      {explainOpen && (
+        <section className="explain-panel">
+          <div className="explain-panel-head">
+            <h2>{explanationLoading ? 'Carregando explicação…' : explanation?.title || 'Explicação'}</h2>
+            <span className="explain-panel-status">{explanationLoading ? 'Aguardando' : explanation?.status || 'Prototipo'}</span>
+          </div>
+          <p>
+            {explanationLoading
+              ? 'Buscando explicação do card selecionado…'
+              : explanation?.description || 'Clique em um dos cards ou em Explique essa tela para ver o contexto.'}
+          </p>
+        </section>
+      )}
 
       <section className="grid row-2">
         <TotalBalance

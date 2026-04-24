@@ -1027,6 +1027,84 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 /* Grid dedicado da Home 2: 4 cards NF lado a lado */
 .grid.row-nf { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.nf-dashboard-wrap { position: relative; padding-bottom: 88px; }
+.explain-screen-btn {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 18px 32px rgba(16,24,40,0.18);
+  transition: transform 180ms ease, background 180ms ease;
+}
+.explain-screen-btn:hover {
+  background: #1f5df5;
+  transform: translateY(-1px);
+}
+.nf-explain-card-btn {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(16,24,40,0.08);
+  background: rgba(255,255,255,0.95);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 12px 24px rgba(16,24,40,0.12);
+  cursor: pointer;
+}
+.nf-explain-card-btn:hover {
+  background: white;
+}
+.explain-panel {
+  grid-column: 1 / -1;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  margin-top: 18px;
+}
+.explain-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.explain-panel-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+.explain-panel-status {
+  color: var(--text-3);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+.explain-panel p {
+  margin: 0;
+  line-height: 1.7;
+  color: var(--text);
+}
+
 @media (max-width: 1400px) {
   .grid.row-nf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
