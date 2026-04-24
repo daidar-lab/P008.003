@@ -9,6 +9,7 @@ import VariacaoPorGrupo from '../components/VariacaoPorGrupo.jsx'
 import Revenue from '../components/Revenue.jsx'
 import NfVariationCard from '../components/NfVariationCard.jsx'
 import PriorizacaoAuditoria from '../components/PriorizacaoAuditoria.jsx'
+import ImpactoProducaoCard from '../components/ImpactoProducaoCard.jsx'
 import TopFornecedoresModal from '../components/TopFornecedoresModal.jsx'
 import DayDetailsModal from '../components/DayDetailsModal.jsx'
 import { useApi } from '../api.js'
@@ -103,6 +104,11 @@ const EXPLANATION_DATA = {
     title: 'Priorização de Auditoria',
     description: 'Este card apresenta os indicadores-chave para priorização da auditoria. Os "Itens relevantes" mostram o percentual de itens que requerem análise mais detalhada, enquanto a "Cobertura financeira" indica qual porcentagem do valor total esses itens representam. A lista de top fornecedores permite focar a auditoria nos fornecedores de maior impacto financeiro.',
     status: 'Priorização'
+  },
+  impactoProducao: {
+    title: 'Impacto na Produção',
+    description: 'Este card mostra como os desvios de custo identificados nas notas fiscais impactam diretamente nos custos de produção dos produtos finais. Por exemplo, um desvio no preço do malte aumenta o custo unitário da cerveja produzida. Permite priorizar ações corretivas baseadas no impacto real na produção.',
+    status: 'Análise de Impacto'
   }
 }
 
@@ -168,6 +174,7 @@ export default function Overview2() {
   const handleExplainTotalBalance = () => toggleExplanation('totalBalance')
   const handleExplainVariacaoGrupo = () => toggleExplanation('variacaoGrupo')
   const handleExplainPriorizacao = () => toggleExplanation('priorization')
+  const handleExplainImpactoProducao = () => toggleExplanation('impactoProducao')
 
   // Fechar modal com ESC
   useEffect(() => {
@@ -229,6 +236,8 @@ export default function Overview2() {
           onClick={() => setFornecedoresModalOpen(true)}
           onExplainClick={handleExplainPriorizacao}
         />
+
+        <ImpactoProducaoCard onExplainClick={handleExplainImpactoProducao} />
       </section>
 
       {explainOpen && (
