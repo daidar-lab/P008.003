@@ -1187,6 +1187,203 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   background: white;
 }
 
+/* ========== Priorização de Auditoria Card ========== */
+.auditoria-card {
+  background: linear-gradient(135deg, #f5f3ff 0%, #f0f9ff 100%);
+  position: relative;
+}
+
+.auditoria-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 12px 0;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+}
+
+.metric-item {
+  text-align: center;
+}
+
+.metric-label {
+  display: block;
+  font-size: 9.5px;
+  color: var(--text-3);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 4px 0;
+}
+
+.metric-desc {
+  display: block;
+  font-size: 10px;
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+.auditoria-top-fornecedores {
+  margin-top: 12px;
+}
+
+.auditoria-top-fornecedores .sublabel {
+  display: block;
+  font-size: 9.5px;
+  color: var(--text-3);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.fornecedores-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.fornecedor-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(139, 92, 246, 0.08);
+  border-radius: 8px;
+}
+
+.fornecedor-rank {
+  font-weight: 700;
+  color: #8b5cf6;
+  font-size: 11px;
+  min-width: 28px;
+  text-align: center;
+}
+
+.fornecedor-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.fornecedor-nome {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fornecedor-stats {
+  display: flex;
+  gap: 8px;
+  font-size: 9px;
+  color: var(--text-3);
+}
+
+.fornecedor-valor {
+  font-weight: 600;
+  color: #8b5cf6;
+}
+
+.auditoria-view-all {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed #8b5cf6;
+  background: transparent;
+  color: #8b5cf6;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.auditoria-view-all:hover {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+/* ========== Top Fornecedores Modal ========== */
+.modal-fornecedores .explain-modal-content {
+  max-width: 700px;
+}
+
+.fornecedores-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.fornecedores-table thead {
+  border-bottom: 2px solid var(--border);
+}
+
+.fornecedores-table th {
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-3);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.fornecedores-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 180ms ease;
+}
+
+.fornecedores-table tbody tr:hover {
+  background: var(--panel-2);
+}
+
+.fornecedor-row td {
+  padding: 12px 8px;
+  vertical-align: middle;
+}
+
+.fornecedor-rank-grande {
+  display: inline-block;
+  font-weight: 700;
+  color: #8b5cf6;
+  font-size: 13px;
+  min-width: 32px;
+  margin-right: 8px;
+}
+
+.fornecedor-cell-text {
+  display: inline-block;
+}
+
+.fornecedor-nome-grande {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.valor-fornecedor {
+  font-weight: 600;
+  color: #8b5cf6;
+}
+
+.risco-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 10px;
+}
+
 @media (max-width: 1400px) {
   .grid.row-nf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

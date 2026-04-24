@@ -8,6 +8,8 @@ import SpentAmount from '../components/SpentAmount.jsx'
 import VariacaoPorGrupo from '../components/VariacaoPorGrupo.jsx'
 import Revenue from '../components/Revenue.jsx'
 import NfVariationCard from '../components/NfVariationCard.jsx'
+import PriorizacaoAuditoria from '../components/PriorizacaoAuditoria.jsx'
+import TopFornecedoresModal from '../components/TopFornecedoresModal.jsx'
 import DayDetailsModal from '../components/DayDetailsModal.jsx'
 import { useApi } from '../api.js'
 
@@ -96,6 +98,11 @@ const EXPLANATION_DATA = {
     title: 'Variação por Grupo de Produtos',
     description: 'Esta tabela agrupa os produtos por categoria e mostra como cada grupo se comporta em relação aos cenários de NF versus valor negociado. Permite identificar padrões de economia ou sobrepreço por tipo de produto.',
     status: 'Análise por categoria'
+  },
+  priorization: {
+    title: 'Priorização de Auditoria',
+    description: 'Este card apresenta os indicadores-chave para priorização da auditoria. Os "Itens relevantes" mostram o percentual de itens que requerem análise mais detalhada, enquanto a "Cobertura financeira" indica qual porcentagem do valor total esses itens representam. A lista de top fornecedores permite focar a auditoria nos fornecedores de maior impacto financeiro.',
+    status: 'Priorização'
   }
 }
 
@@ -110,6 +117,7 @@ export default function Overview2() {
   const [explanation, setExplanation] = useState(null)
   const [explanationLoading, setExplanationLoading] = useState(false)
   const [currentExplanationKey, setCurrentExplanationKey] = useState(null)
+  const [fornecedoresModalOpen, setFornecedoresModalOpen] = useState(false)
 
   const { data: filiais } = useApi('/filiais', { fallback: [] })
   const filiaisList = Array.isArray(filiais) ? filiais : []
@@ -154,9 +162,12 @@ export default function Overview2() {
     setCurrentExplanationKey(null)
   }
 
+  const toggle = (key) => setSelectedCard((prev) => (prev === key ? null : key))
+
   const handleExplainClick = () => toggleExplanation(selectedCard || 'screen')
   const handleExplainTotalBalance = () => toggleExplanation('totalBalance')
   const handleExplainVariacaoGrupo = () => toggleExplanation('variacaoGrupo')
+  const handleExplainPriorizacao = () => toggleExplanation('priorization')
 
   // Fechar modal com ESC
   useEffect(() => {
@@ -213,6 +224,11 @@ export default function Overview2() {
             Explique essa tela
           </button>
         )}
+
+        <PriorizacaoAuditoria 
+          onClick={() => setFornecedoresModalOpen(true)}
+          onExplainClick={handleExplainPriorizacao}
+        />
       </section>
 
       {explainOpen && (
@@ -272,6 +288,10 @@ export default function Overview2() {
           filter={detailsCtx.filter}
           onClose={() => setDetailsCtx(null)}
         />
+      )}
+
+      {fornecedoresModalOpen && (
+        <TopFornecedoresModal onClose={() => setFornecedoresModalOpen(false)} />
       )}
     </>
   )
