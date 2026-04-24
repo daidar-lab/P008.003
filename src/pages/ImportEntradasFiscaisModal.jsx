@@ -37,7 +37,10 @@ export default function ImportEntradasFiscaisModal({ onCancel, onImported }) {
       const res = await fetch(`${BASE}/entradas-fiscais/import`, { method: 'POST', body: form })
       const body = await res.json().catch(() => ({}))
       if (!res.ok && !body?.errors) {
-        setError(body?.message || body?.error || `HTTP ${res.status}`)
+        const message = body?.message || body?.error || `HTTP ${res.status}`
+        setError(body?.error === 'internal_error'
+          ? `Erro interno ao importar: ${body?.message || 'verifique o servidor'}`
+          : message)
         return
       }
       setResult(body)

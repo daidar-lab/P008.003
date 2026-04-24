@@ -282,6 +282,23 @@ router.post('/import', (req, res, next) => {
       if (!sheet) return res.status(400).json({ error: 'empty_file' })
       const raw = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false })
 
+      if (raw.length === 0) {
+        return res.status(400).json({ error: 'empty_file', message: 'O arquivo não contém dados' })
+      }
+
+      const headerKeys = new Set(Object.keys(raw[0]).map(normalizeKey))
+      const missingRequired = FIELDS.filter(f => f.required)
+        .filter(f => !headerKeys.has(normalizeKey(f.camel))
+          && !f.aliases?.some(a => headerKeys.has(a)))
+        .map(f => f.db)
+
+      if (missingRequired.length) {
+        return res.status(400).json({
+          error: 'missing_required_columns',
+          message: `Colunas obrigatórias não encontradas: ${missingRequired.join(', ')}`
+        })
+      }
+
       if (raw.length > IMPORT_MAX_ROWS) {
         return res.status(413).json({
           error: 'too_many_rows',
@@ -321,6 +338,16 @@ router.post('/import', (req, res, next) => {
       if (errors.length && valid.length === 0) {
         return res.status(422).json({
           error: 'validation_error',
+          totalRows: raw.length,
+          inserted: 0, updated: 0, skipped: 0,
+          errors
+        })
+      }
+
+      if (raw.length > 0 && valid.length === 0) {
+        return res.status(422).json({
+          error: 'no_valid_rows',
+          message: 'Nenhuma linha válida encontrada na planilha. Verifique se os cabeçalhos e dados obrigatórios estão corretos.',
           totalRows: raw.length,
           inserted: 0, updated: 0, skipped: 0,
           errors

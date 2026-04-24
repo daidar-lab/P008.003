@@ -1193,25 +1193,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .impacto-producao-card {
   position: relative;
   min-height: 420px;
-}
-
-.impacto-explain-btn {
-  width: 100%;
-  margin-top: 12px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(79, 70, 229, 0.16);
-  background: #eef2ff;
-  color: #312e81;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 180ms ease, transform 180ms ease;
-}
-
-.impacto-explain-btn:hover {
-  background: #e0e7ff;
-  transform: translateY(-1px);
+  padding-bottom: 96px;
 }
 
 .impacto-summary {
@@ -1341,6 +1323,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   font-weight: 600;
   cursor: pointer;
   transition: background 180ms ease, color 180ms ease;
+  margin-bottom: 18px;
 }
 
 .impacto-view-all:hover {
