@@ -1,0 +1,111 @@
+.sidebar {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 16px;
+  height: calc(100vh - 32px);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 14px;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+}
+
+.logoMark {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #2f6bff 0%, #1f8be0 55%, #19b26b 100%);
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+}
+.logoMark svg { display: block; }
+
+.logoWord {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  line-height: 1;
+}
+
+.logoWord1 { color: var(--text); }
+.logoWord2 {
+  color: var(--text);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  opacity: 0.72;
+}
+
+.nav {
+  display: flex; flex-direction: column; gap: 2px;
+  margin-top: 6px;
+}
+
+.navItem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 500;
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
+}
+.navItem:hover { background: var(--panel-2); }
+.navItem.active {
+  background: #f3f4f7;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.kbd {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.navSubgroup {
+  display: flex; flex-direction: column; gap: 2px;
+  margin: 2px 0 4px 18px;
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+}
+
+.navItem.sub {
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.profile {
+  margin-top: auto;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 8px;
+  border-top: 1px solid var(--border);
+}
+
+.profileAvatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #ffd6a5, #ffadad);
+  display: flex; align-items: center; justify-content: center;
+  color: #7a4a1f; font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.profileInfo { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.name { font-weight: 600; font-size: 13px; }
+.mail { font-size: 11px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; }
+.profileMore { margin-left: auto; color: var(--text-3); display: flex; padding: 4px; }

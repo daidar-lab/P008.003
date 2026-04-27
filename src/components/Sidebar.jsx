@@ -4,6 +4,7 @@ import {
   FolderOpen, ChevronDown, ChevronRight,
   ArrowRightLeft, ShoppingBag, Receipt, Building2, Layers, DollarSign
 } from 'lucide-react'
+import styles from './Sidebar.module.css'
 
 const primary = [
   { icon: LayoutDashboard, label: 'Dashboard',        route: 'dashboard' },
@@ -23,9 +24,9 @@ export default function Sidebar({ route, onNavigate }) {
   const [openCadastros, setOpenCadastros] = useState(cadastrosActive)
 
   return (
-    <aside className="sidebar">
-      <div className="logo">
-        <span className="logo-mark" aria-hidden="true">
+    <aside className={styles.sidebar}>
+      <div className={styles.logo}>
+        <span className={styles.logoMark} aria-hidden="true">
           <svg viewBox="0 0 64 64" width="18" height="18" fill="none">
             <path
               d="M17 33.5 L28 44 L47 21"
@@ -36,45 +37,45 @@ export default function Sidebar({ route, onNavigate }) {
             />
           </svg>
         </span>
-        <span className="logo-word">
-          <span className="logo-word-1">Audit</span>
-          <span className="logo-word-2">Supply</span>
+        <span className={styles.logoWord}>
+          <span className={styles.logoWord1}>Audit</span>
+          <span className={styles.logoWord2}>Supply</span>
         </span>
       </div>
 
-      <nav className="nav">
+      <nav className={styles.nav}>
         {primary.map((item) => {
           const active = item.route && item.route === route
           return (
             <button
               key={item.label}
-              className={`nav-item ${active ? 'active' : ''}`}
+              className={`${styles.navItem} ${active ? styles.active : ''}`}
               onClick={() => item.route && onNavigate(item.route)}
             >
               <item.icon size={16} strokeWidth={1.8} />
               <span>{item.label}</span>
-              {item.kbd && <span className="kbd">{item.kbd}</span>}
+              {item.kbd && <span className={styles.kbd}>{item.kbd}</span>}
             </button>
           )
         })}
 
         <button
-          className={`nav-item ${cadastrosActive ? 'active' : ''}`}
+          className={`${styles.navItem} ${cadastrosActive ? styles.active : ''}`}
           onClick={() => setOpenCadastros((v) => !v)}
         >
           <FolderOpen size={16} strokeWidth={1.8} />
           <span>Cadastros</span>
-          <span className="kbd" style={{ display: 'inline-flex' }}>
+          <span className={styles.kbd} style={{ display: 'inline-flex' }}>
             {openCadastros ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </span>
         </button>
 
         {openCadastros && (
-          <div className="nav-subgroup">
+          <div className={styles.navSubgroup}>
             {cadastros.map((item) => (
               <button
                 key={item.label}
-                className={`nav-item sub ${item.route === route ? 'active' : ''}`}
+                className={`${styles.navItem} ${styles.sub} ${item.route === route ? styles.active : ''}`}
                 onClick={() => onNavigate(item.route)}
               >
                 <item.icon size={14} strokeWidth={1.8} />
@@ -85,13 +86,13 @@ export default function Sidebar({ route, onNavigate }) {
         )}
       </nav>
 
-      <div className="profile">
-        <div className="profile-avatar">F</div>
-        <div className="profile-info">
-          <span className="name">Felix</span>
-          <span className="mail">felix@auditsupply.demo</span>
+      <div className={styles.profile}>
+        <div className={styles.profileAvatar}>F</div>
+        <div className={styles.profileInfo}>
+          <span className={styles.name}>Felix</span>
+          <span className={styles.mail}>felix@auditsupply.demo</span>
         </div>
-        <button className="profile-more" aria-label="More">
+        <button className={styles.profileMore} aria-label="More">
           <MoreVertical size={16} />
         </button>
       </div>
